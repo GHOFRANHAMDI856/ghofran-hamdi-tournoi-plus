@@ -19,4 +19,17 @@ describe('Auth', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('proposes arbitre as a registration role', () => {
+    const registrationFixture = TestBed.createComponent(Auth);
+    registrationFixture.componentInstance.setMode('register');
+    registrationFixture.detectChanges();
+
+    const roleOptions = Array.from(
+      (registrationFixture.nativeElement as HTMLElement).querySelectorAll('#account-role option'),
+    ).map((option) => option.textContent?.trim());
+
+    expect(roleOptions).toContain('Arbitre');
+    registrationFixture.destroy();
+  });
 });

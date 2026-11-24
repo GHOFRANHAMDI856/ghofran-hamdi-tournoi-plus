@@ -25,6 +25,55 @@
     <span class="summary-label">Scores à saisir</span>
     <span class="summary-hint">Matchs sans résultat complet</span>
   </article>
+  <article class="summary-card">
+    <span class="summary-value">{{ teamCount() }}</span>
+    <span class="summary-label">Équipes inscrites</span>
+    <span class="summary-hint">Dans tous vos tournois</span>
+  </article>
+  <article class="summary-card">
+    <span class="summary-value">{{ playedMatches() }}</span>
+    <span class="summary-label">Matchs joués</span>
+    <span class="summary-hint">Scores enregistrés des deux équipes</span>
+  </article>
+  <article class="summary-card">
+    <span class="summary-value">{{ simulatedRevenue }} €</span>
+    <span class="summary-label">Recettes</span>
+    <span class="summary-hint">À suivre lorsque la billetterie sera disponible</span>
+  </article>
+</section>
+
+<section class="role-section organizer-match-chart" aria-labelledby="organizer-match-chart-title">
+  <div class="tournament-heading">
+    <div>
+      <p class="dashboard-eyebrow">SUIVI DES COMPÉTITIONS</p>
+      <h2 id="organizer-match-chart-title">Progression des matchs</h2>
+    </div>
+  </div>
+  @if (matchProgress().length) {
+    <div class="match-chart-list">
+      @for (progress of matchProgress(); track progress.id) {
+        <div class="match-chart-row">
+          <div class="match-chart-label">
+            <strong>{{ progress.name }}</strong>
+            <span>{{ progress.played }} / {{ progress.total }} matchs</span>
+          </div>
+          <div
+            class="match-chart-track"
+            role="progressbar"
+            [attr.aria-label]="'Matchs joués : ' + progress.name"
+            [attr.aria-valuenow]="progress.percentage"
+            [attr.aria-valuetext]="progress.played + ' sur ' + progress.total + ' matchs'"
+            aria-valuemin="0"
+            aria-valuemax="100"
+          >
+            <span class="match-chart-bar" [style.width.%]="progress.percentage"></span>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <p class="small-empty">Créez un tournoi pour voir la progression de ses matchs.</p>
+  }
 </section>
 
 <section class="tournament-section" aria-labelledby="organizer-tournaments-title">
@@ -60,9 +109,16 @@
         </div>
         <div class="tournament-field">
           <label for="tournament-sport">Sport / jeu *</label>
-          <input id="tournament-sport" type="text" formControlName="sport" maxlength="50" placeholder="Ex. football" />
+          <input id="tournament-sport" type="text" formControlName="sport" maxlength="50" placeholder="Ex. basketball" />
           @if (tournamentForm.controls.sport.touched && tournamentForm.controls.sport.invalid) {
             <small class="input-error">Saisissez un sport ou un jeu.</small>
+          }
+        </div>
+        <div class="tournament-field">
+          <label for="tournament-category">Catégorie *</label>
+          <input id="tournament-category" type="text" formControlName="category" maxlength="60" placeholder="Ex. U15, Amateur" />
+          @if (tournamentForm.controls.category.touched && tournamentForm.controls.category.invalid) {
+            <small class="input-error">Saisissez une catégorie.</small>
           }
         </div>
         <div class="tournament-field">
@@ -125,7 +181,7 @@
         <article class="tournament-card">
           <div class="tournament-card-heading">
             <div>
-              <span class="sport-tag">{{ tournament.sport }} · {{ formatFormat(tournament.format) }}</span>
+              <span class="sport-tag">{{ tournament.sport }} · {{ tournament.category || 'Catégorie à définir' }} · {{ formatFormat(tournament.format) }}</span>
               <h3>{{ tournament.name }}</h3>
               <span class="tournament-status">{{ getTournamentPhase(tournament) }} · {{ formatStatus(tournament.status) }}</span>
             </div>

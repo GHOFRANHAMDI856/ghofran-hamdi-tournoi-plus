@@ -25,6 +25,7 @@ export class OrganizerSpace {
   readonly tournamentForm = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(80)]],
     sport: ['', [Validators.required, Validators.maxLength(50)]],
+    category: ['', [Validators.required, Validators.maxLength(60)]],
     startDate: ['', Validators.required],
     endDate: ['', Validators.required],
     location: ['', [Validators.required, Validators.maxLength(100)]],
@@ -72,6 +73,32 @@ export class OrganizerSpace {
       0,
     ),
   );
+  readonly teamCount = computed(() =>
+    this.tournaments().reduce(
+      (total, tournament) => total + this.getTeams(tournament.id).length,
+      0,
+    ),
+  );
+  readonly playedMatches = computed(() =>
+    this.tournaments().reduce(
+      (total, tournament) => total + this.getMatches(tournament.id)
+        .filter((match) => match.homeScore !== null && match.awayScore !== null).length,
+      0,
+    ),
+  );
+  readonly simulatedRevenue = 0;
+  readonly matchProgress = computed(() => this.tournaments().map((tournament) => {
+    const matches = this.getMatches(tournament.id);
+    const played = matches.filter((match) => match.homeScore !== null && match.awayScore !== null).length;
+
+    return {
+      id: tournament.id,
+      name: tournament.name,
+      played,
+      total: matches.length,
+      percentage: matches.length === 0 ? 0 : Math.round((played / matches.length) * 100),
+    };
+  }));
   readonly pendingRegistrations = computed(() =>
     this.tournaments().reduce(
       (total, tournament) => total + this.getJoinRequests(tournament.id)
@@ -98,6 +125,7 @@ export class OrganizerSpace {
     this.tournamentForm.reset({
       name: '',
       sport: '',
+      category: '',
       startDate: '',
       endDate: '',
       location: '',
@@ -117,6 +145,7 @@ export class OrganizerSpace {
     this.tournamentForm.reset({
       name: tournament.name,
       sport: tournament.sport,
+      category: tournament.category,
       startDate: tournament.startDate,
       endDate: tournament.endDate,
       location: tournament.location,
@@ -141,7 +170,12 @@ export class OrganizerSpace {
   saveTournament(): void {
     this.message.set('');
     this.error.set('');
-    this.trimRequired(this.tournamentForm.controls.name, this.tournamentForm.controls.sport, this.tournamentForm.controls.location);
+    this.trimRequired(
+      this.tournamentForm.controls.name,
+      this.tournamentForm.controls.sport,
+      this.tournamentForm.controls.category,
+      this.tournamentForm.controls.location,
+    );
     if (this.tournamentForm.invalid) {
       this.tournamentForm.markAllAsTouched();
       return;
@@ -157,6 +191,7 @@ export class OrganizerSpace {
       ...values,
       name: values.name.trim(),
       sport: values.sport.trim(),
+      category: values.category.trim(),
       location: values.location.trim(),
       description: values.description.trim(),
       rules: values.rules.trim(),

@@ -42,6 +42,7 @@ export class Dashboard {
       organisateur: 'Organisateur',
       joueur: 'Joueur',
       spectateur: 'Spectateur',
+      arbitre: 'Arbitre',
     };
 
     return labels[role];

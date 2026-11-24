@@ -3,6 +3,7 @@
   [class.organizer-theme]="currentUser?.role === 'organisateur'"
   [class.player-theme]="currentUser?.role === 'joueur'"
   [class.spectator-theme]="currentUser?.role === 'spectateur'"
+  [class.referee-theme]="currentUser?.role === 'arbitre'"
 >
   <aside class="dashboard-sidebar">
     <a class="dashboard-brand" href="#overview" aria-label="Tournoi Plus, espace personnel">
@@ -66,6 +67,18 @@
         <app-player-space />
       } @else if (currentUser?.role === 'spectateur') {
         <app-spectator-space />
+      } @else if (currentUser?.role === 'arbitre') {
+        <section class="role-space referee-space" aria-labelledby="referee-title">
+          <section class="role-section">
+            <div class="tournament-heading">
+              <div>
+                <p class="dashboard-eyebrow">ESPACE ARBITRE</p>
+                <h2 id="referee-title">Mes désignations</h2>
+              </div>
+            </div>
+            <p class="small-empty">Aucun match ne vous est attribué pour le moment.</p>
+          </section>
+        </section>
       } @else {
         <section class="empty-state">
           <h2>Espace indisponible</h2>

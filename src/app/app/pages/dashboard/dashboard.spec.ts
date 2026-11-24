@@ -80,4 +80,19 @@ describe('Dashboard', () => {
     expect(page.querySelector('app-organizer-space')).toBeNull();
     expect(page.textContent).toContain('Tournois à suivre');
   });
+
+  it('renders an empty designations list for an arbitre', () => {
+    signedInUser = {
+      name: 'Arbitre Test',
+      email: 'referee@example.com',
+      role: 'arbitre',
+    };
+    const fixture = TestBed.createComponent(Dashboard);
+    fixture.detectChanges();
+
+    const page = fixture.nativeElement as HTMLElement;
+    expect(page.querySelector('.referee-space')).toBeTruthy();
+    expect(page.textContent).toContain('Mes désignations');
+    expect(page.textContent).not.toContain('Ce compte n’a pas de rôle actif');
+  });
 });

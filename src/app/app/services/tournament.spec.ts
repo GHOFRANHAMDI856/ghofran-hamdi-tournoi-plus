@@ -9,6 +9,7 @@ describe('TournamentService', () => {
   const tournamentInput: TournamentInput = {
     name: 'Coupe régionale',
     sport: 'Football',
+    category: 'U15',
     startDate: '2026-12-10',
     endDate: '2026-12-12',
     location: 'Stade municipal',
@@ -75,6 +76,7 @@ describe('TournamentService', () => {
     expect(service.getMyTournaments()[0]).toMatchObject({
       startDate: '2026-12-10',
       endDate: '2026-12-10',
+      category: '',
       status: 'open',
       maxTeams: 16,
     });

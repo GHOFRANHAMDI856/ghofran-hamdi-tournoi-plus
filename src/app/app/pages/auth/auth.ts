@@ -31,6 +31,7 @@ export class Auth {
     { value: 'organisateur', label: 'Organisateur' },
     { value: 'joueur', label: 'Joueur' },
     { value: 'spectateur', label: 'Spectateur' },
+    { value: 'arbitre', label: 'Arbitre' },
   ];
   errorMessage = '';
   successMessage = '';
@@ -50,6 +51,7 @@ export class Auth {
       organisateur: 'Organisateur',
       joueur: 'Joueur',
       spectateur: 'Spectateur',
+      arbitre: 'Arbitre',
     };
 
     return labels[role];

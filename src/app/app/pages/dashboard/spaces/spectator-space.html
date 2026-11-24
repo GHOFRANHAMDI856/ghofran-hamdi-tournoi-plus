@@ -29,11 +29,35 @@
       <p>Choisissez vos compétitions pour retrouver rapidement leurs matchs et leurs scores.</p>
     </div>
   </div>
-  @if (tournaments().length) {
+  <div class="spectator-filters" role="search" aria-label="Rechercher un tournoi">
+    <div class="spectator-filter">
+      <label for="tournament-search">Rechercher un tournoi</label>
+      <input id="tournament-search" type="search" [value]="searchTerm()" (input)="updateSearchTerm($event)" placeholder="Nom, lieu ou catégorie" />
+    </div>
+    <div class="spectator-filter">
+      <label for="tournament-city">Ville</label>
+      <input id="tournament-city" type="text" [value]="cityFilter()" (input)="updateCityFilter($event)" placeholder="Saisir une ville" />
+    </div>
+    <div class="spectator-filter">
+      <label for="tournament-date">Date du tournoi</label>
+      <input id="tournament-date" type="date" [value]="dateFilter()" (change)="updateDateFilter($event)" />
+    </div>
+    <div class="spectator-filter">
+      <label for="tournament-category-filter">Catégorie</label>
+      <select id="tournament-category-filter" [value]="categoryFilter()" (change)="updateCategoryFilter($event)">
+        <option value="">Toutes les catégories</option>
+        @for (category of categories(); track category) {
+          <option [value]="category">{{ category }}</option>
+        }
+      </select>
+    </div>
+    <button class="secondary-action spectator-reset" type="button" (click)="resetFilters()">Effacer les filtres</button>
+  </div>
+  @if (filteredTournaments().length) {
     <div class="team-grid">
-      @for (tournament of tournaments(); track tournament.id) {
+      @for (tournament of filteredTournaments(); track tournament.id) {
         <article class="team-card spectator-tournament-card">
-          <span class="sport-tag">{{ tournament.sport }} · {{ formatStatus(tournament.status) }}</span>
+          <span class="sport-tag">{{ tournament.sport }} · {{ tournament.category || 'Catégorie à définir' }} · {{ formatStatus(tournament.status) }}</span>
           <h3>{{ tournament.name }}</h3>
           <p>{{ formatDate(tournament.startDate) }} – {{ formatDate(tournament.endDate) }} · {{ tournament.location }}</p>
           <button
@@ -47,6 +71,8 @@
         </article>
       }
     </div>
+  } @else if (tournaments().length) {
+    <p class="small-empty">Aucun tournoi ne correspond à ces filtres.</p>
   } @else {
     <p class="small-empty">Aucun tournoi publié pour le moment.</p>
   }

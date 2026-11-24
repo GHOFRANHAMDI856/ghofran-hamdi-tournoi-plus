@@ -13,6 +13,32 @@ export class SpectatorSpace {
   readonly tournaments = signal(this.tournamentService.getPublicTournaments());
   readonly matches = signal(this.tournamentService.getPublicMatches());
   readonly followedTournamentIds = signal(this.tournamentService.getFollowedTournamentIds());
+  readonly searchTerm = signal('');
+  readonly cityFilter = signal('');
+  readonly dateFilter = signal('');
+  readonly categoryFilter = signal('');
+  readonly categories = computed(() => [...new Set(
+    this.tournaments().map((tournament) => tournament.category.trim()).filter(Boolean),
+  )].sort((first, second) => first.localeCompare(second, 'fr')));
+  readonly filteredTournaments = computed(() => {
+    const searchTerm = this.searchTerm().trim().toLocaleLowerCase('fr');
+    const cityFilter = this.cityFilter().trim().toLocaleLowerCase('fr');
+    const dateFilter = this.dateFilter();
+    const categoryFilter = this.categoryFilter();
+
+    return this.tournaments().filter((tournament) => {
+      const searchableText = `${tournament.name} ${tournament.location} ${tournament.category}`
+        .toLocaleLowerCase('fr');
+      const matchesSearch = !searchTerm || searchableText.includes(searchTerm);
+      const matchesCity = !cityFilter || tournament.location.toLocaleLowerCase('fr').includes(cityFilter);
+      const matchesDate = !dateFilter || (
+        tournament.startDate <= dateFilter && tournament.endDate >= dateFilter
+      );
+      const matchesCategory = !categoryFilter || tournament.category === categoryFilter;
+
+      return matchesSearch && matchesCity && matchesDate && matchesCategory;
+    });
+  });
   readonly liveMatches = computed(() =>
     this.matches().filter((match) => this.getMatchStatus(match) === 'En cours').length,
   );
@@ -29,6 +55,29 @@ export class SpectatorSpace {
     this.tournaments.set(this.tournamentService.getPublicTournaments());
     this.matches.set(this.tournamentService.getPublicMatches());
     this.followedTournamentIds.set(this.tournamentService.getFollowedTournamentIds());
+  }
+
+  updateSearchTerm(event: Event): void {
+    this.searchTerm.set((event.target as HTMLInputElement).value);
+  }
+
+  updateCityFilter(event: Event): void {
+    this.cityFilter.set((event.target as HTMLInputElement).value);
+  }
+
+  updateDateFilter(event: Event): void {
+    this.dateFilter.set((event.target as HTMLInputElement).value);
+  }
+
+  updateCategoryFilter(event: Event): void {
+    this.categoryFilter.set((event.target as HTMLSelectElement).value);
+  }
+
+  resetFilters(): void {
+    this.searchTerm.set('');
+    this.cityFilter.set('');
+    this.dateFilter.set('');
+    this.categoryFilter.set('');
   }
 
   isFollowing(tournamentId: string): boolean {

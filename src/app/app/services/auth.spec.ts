@@ -49,6 +49,9 @@ describe('Auth', () => {
 
     expect(service.register('Player User', 'player@example.com', 'password123', 'joueur').success).toBe(true);
     expect(service.getCurrentUser()?.role).toBe('joueur');
+
+    expect(service.register('Referee User', 'referee@example.com', 'password123', 'arbitre').success).toBe(true);
+    expect(service.getCurrentUser()?.role).toBe('arbitre');
   });
 
   it('migrates existing Admin accounts to Organisateur', () => {

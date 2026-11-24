@@ -10,6 +10,7 @@ export interface Tournament {
   ownerEmail: string;
   name: string;
   sport: string;
+  category: string;
   startDate: string;
   endDate: string;
   location: string;
@@ -80,6 +81,7 @@ interface SavedTournament {
   ownerEmail: string;
   name: string;
   sport: string;
+  category?: string;
   startDate?: string;
   endDate?: string;
   date?: string;
@@ -593,6 +595,7 @@ export class TournamentService {
       ownerEmail: tournament.ownerEmail,
       name: tournament.name,
       sport: tournament.sport,
+      category: tournament.category ?? '',
       startDate: tournament.startDate ?? tournament.date ?? '',
       endDate: tournament.endDate ?? tournament.date ?? '',
       location: tournament.location ?? '',
@@ -682,6 +685,7 @@ export class TournamentService {
     return Boolean(
       input.name.trim()
       && input.sport.trim()
+      && input.category.trim()
       && input.location.trim()
       && Number.isFinite(start)
       && Number.isFinite(end)

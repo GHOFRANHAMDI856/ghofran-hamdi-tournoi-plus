@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 
-export const ACCOUNT_ROLES = ['organisateur', 'joueur', 'spectateur'] as const;
+export const ACCOUNT_ROLES = ['organisateur', 'joueur', 'spectateur', 'arbitre'] as const;
 export type UserRole = (typeof ACCOUNT_ROLES)[number];
 export type PublicUserRole = UserRole;
 
