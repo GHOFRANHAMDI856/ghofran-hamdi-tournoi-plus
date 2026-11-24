@@ -53,30 +53,26 @@ Sports proposés :
 ### Espace spectateur
 
 - Recherche et filtrage des tournois.
-- Filtres par catégorie, ville et date.
+- Filtres par nom, ville, date et sport.
 - Suivi ou arrêt du suivi d'un tournoi.
 - Consultation des tournois suivis et des matchs en direct.
 
 ## Architecture
 
 ```text
-frontend/
-  angular.json
-  package.json
-  src/
+src/
+  app/
     app/
-      app/
-        auth.guard.ts
-        pages/
-          auth/
-          dashboard/
-            spaces/
-        services/
-          auth.ts
-          tournament.ts
-    main.ts
-    styles.css
-  public/
+      auth.guard.ts
+      pages/
+        auth/
+        dashboard/
+          spaces/
+      services/
+        auth.ts
+        tournament.ts
+  main.ts
+  styles.css
 backend/
   src/
     app.js
@@ -159,34 +155,19 @@ Les outils et notions utilisés sont principalement :
 
 ## Installation
 
-```powershell
-Set-Location gestion-tournoi
-npm run install:all
+```bash
+npm install
 ```
 
 ## Démarrage
 
-Depuis la racine du projet, démarrer le frontend et le backend ensemble :
-
-```powershell
-npm run start:all
+```bash
+npm start
 ```
 
 Puis ouvrir `http://localhost:4200/`.
 
 La route principale de connexion est `/login`. Après authentification, l'application redirige vers `/gestion`.
-
-Les applications peuvent aussi être démarrées séparément :
-
-```powershell
-npm run start:frontend
-```
-
-Dans un second terminal :
-
-```powershell
-npm run start:backend
-```
 
 ## Backend API
 
@@ -230,17 +211,15 @@ Les routes protégées utilisent `Authorization: Bearer <token>`. Les mots de pa
 
 ## Construction
 
-```powershell
-Set-Location frontend
+```bash
 npm run build
 ```
 
-Les fichiers de production sont générés dans `frontend/dist/`.
+Les fichiers de production sont générés dans le dossier `dist/`.
 
 ## Tests
 
-```powershell
-Set-Location frontend
+```bash
 npm test
 ```
 

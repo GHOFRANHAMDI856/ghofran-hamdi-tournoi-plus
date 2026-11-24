@@ -82,27 +82,26 @@ describe('SpectatorSpace', () => {
     }).compileComponents();
   });
 
-  it('filtre par ville, date comprise dans le tournoi et catégorie', () => {
+  it('combine recherche, ville, date incluse dans le tournoi et catégorie', () => {
     const fixture = TestBed.createComponent(SpectatorSpace);
     const component = fixture.componentInstance;
 
+    component.searchTerm.set('coupe');
     component.cityFilter.set('lyon');
     component.dateFilter.set('2026-11-25');
-    component.categoryFilter.set('Basketball');
+    component.sportFilter.set('Basketball');
 
     expect(component.filteredTournaments().map((tournament) => tournament.id)).toEqual(['tournament-1']);
   });
 
-  it('efface les filtres de ville, date et catégorie', () => {
+  it('supprime les filtres et déduplique la liste des catégories', () => {
     const fixture = TestBed.createComponent(SpectatorSpace);
     const component = fixture.componentInstance;
-    component.cityFilter.set('Paris');
-    component.dateFilter.set('2026-12-11');
-    component.categoryFilter.set('Football');
+    component.sportFilter.set('Football');
     component.resetFilters();
 
     expect(component.filteredTournaments()).toHaveLength(3);
-    expect(component.categories).toEqual(['Basketball', 'Football', 'Volleyball', 'Handball']);
+    expect(component.sports).toEqual(['Basketball', 'Football', 'Volleyball', 'Handball']);
   });
 
   it('affiche le score de chaque tournoi et le met à jour quand il change', () => {
