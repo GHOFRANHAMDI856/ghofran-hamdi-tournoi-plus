@@ -4,12 +4,13 @@ import { Router } from '@angular/router';
 import { Auth, AuthUser, UserRole } from '../../services/auth';
 import { OrganizerSpace } from './spaces/organizer-space';
 import { PlayerSpace } from './spaces/player-space';
+import { RefereeSpace } from './spaces/referee-space';
 import { SpectatorSpace } from './spaces/spectator-space';
 
 @Component({
   selector: 'app-dashboard',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [OrganizerSpace, PlayerSpace, SpectatorSpace],
+  imports: [OrganizerSpace, PlayerSpace, RefereeSpace, SpectatorSpace],
   templateUrl: './dashboard.html',
 })
 export class Dashboard {

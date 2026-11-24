@@ -108,17 +108,18 @@
           }
         </div>
         <div class="tournament-field">
-          <label for="tournament-sport">Sport / jeu *</label>
-          <input id="tournament-sport" type="text" formControlName="sport" maxlength="50" placeholder="Ex. basketball" />
+          <label for="tournament-sport">Sport / catégorie *</label>
+          <select id="tournament-sport" formControlName="sport">
+            <option value="">Choisir un sport</option>
+            @if (tournamentForm.controls.sport.value && !sports.includes(tournamentForm.controls.sport.value)) {
+              <option [value]="tournamentForm.controls.sport.value">{{ tournamentForm.controls.sport.value }} (existant)</option>
+            }
+            @for (sport of sports; track sport) {
+              <option [value]="sport">{{ sport }}</option>
+            }
+          </select>
           @if (tournamentForm.controls.sport.touched && tournamentForm.controls.sport.invalid) {
-            <small class="input-error">Saisissez un sport ou un jeu.</small>
-          }
-        </div>
-        <div class="tournament-field">
-          <label for="tournament-category">Catégorie *</label>
-          <input id="tournament-category" type="text" formControlName="category" maxlength="60" placeholder="Ex. U15, Amateur" />
-          @if (tournamentForm.controls.category.touched && tournamentForm.controls.category.invalid) {
-            <small class="input-error">Saisissez une catégorie.</small>
+            <small class="input-error">Choisissez une catégorie sportive.</small>
           }
         </div>
         <div class="tournament-field">
@@ -181,7 +182,7 @@
         <article class="tournament-card">
           <div class="tournament-card-heading">
             <div>
-              <span class="sport-tag">{{ tournament.sport }} · {{ tournament.category || 'Catégorie à définir' }} · {{ formatFormat(tournament.format) }}</span>
+              <span class="sport-tag">{{ tournament.sport }} · {{ formatFormat(tournament.format) }}</span>
               <h3>{{ tournament.name }}</h3>
               <span class="tournament-status">{{ getTournamentPhase(tournament) }} · {{ formatStatus(tournament.status) }}</span>
             </div>
@@ -282,6 +283,17 @@
                     <label>Début <input type="datetime-local" formControlName="startAt" /></label>
                     <label>Fin <input type="datetime-local" formControlName="endAt" /></label>
                     <label class="wide-field">Lieu / terrain <input type="text" formControlName="location" maxlength="100" /></label>
+                    <label class="wide-field">Arbitre
+                      <select formControlName="refereeEmail">
+                        <option value="">Aucun arbitre désigné</option>
+                        @for (referee of referees(); track referee.email) {
+                          <option [value]="referee.email">{{ referee.name }} · {{ referee.email }}</option>
+                        }
+                      </select>
+                      @if (referees().length === 0) {
+                        <small>Aucun compte arbitre n’est encore inscrit.</small>
+                      }
+                    </label>
                     <button class="primary-action" type="submit">{{ editingMatchId() ? 'Enregistrer' : 'Planifier' }}</button>
                   </form>
                 }
@@ -293,6 +305,7 @@
                         <div class="match-heading">
                           <span class="match-status">{{ getMatchStatus(match) }}</span>
                           <span>{{ formatDateTime(match.startAt) }} · {{ match.location }}</span>
+                          <span>Arbitre : {{ match.refereeEmail || 'Non désigné' }}</span>
                           <span class="match-actions">
                             <button class="text-action" type="button" (click)="editMatch(match)">Modifier</button>
                             <button class="text-action danger-text" type="button" (click)="deleteMatch(match)">Supprimer</button>

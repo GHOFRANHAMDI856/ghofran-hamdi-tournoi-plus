@@ -9,7 +9,6 @@ describe('TournamentService', () => {
   const tournamentInput: TournamentInput = {
     name: 'Coupe régionale',
     sport: 'Football',
-    category: 'U15',
     startDate: '2026-12-10',
     endDate: '2026-12-12',
     location: 'Stade municipal',
@@ -20,6 +19,7 @@ describe('TournamentService', () => {
     maxTeams: 8,
   };
   const matchInput: MatchInput = {
+    refereeEmail: '',
     homeTeamId: '',
     awayTeamId: '',
     startAt: '2026-12-10T09:00',
@@ -76,7 +76,6 @@ describe('TournamentService', () => {
     expect(service.getMyTournaments()[0]).toMatchObject({
       startDate: '2026-12-10',
       endDate: '2026-12-10',
-      category: '',
       status: 'open',
       maxTeams: 16,
     });
@@ -117,7 +116,9 @@ describe('TournamentService', () => {
       awayTeamId: awayTeam.id,
     })!;
     expect(match).toBeTruthy();
+    const initialCompetitionVersion = service.competitionVersion();
     expect(service.setMatchScore(match.id, 'home', 3)).toBe(true);
+    expect(service.competitionVersion()).toBe(initialCompetitionVersion + 1);
     expect(service.setMatchScore(match.id, 'away', 1)).toBe(true);
     expect(service.setPlayerPoints(match.id, 'player@example.com', 2)).toBe(true);
 
@@ -126,6 +127,14 @@ describe('TournamentService', () => {
     expect(service.getPlayerMatches().map((item) => item.id)).toEqual([match.id]);
     expect(service.getPlayerPoints(match.id, 'player@example.com')).toBe(2);
     expect(service.getPlayerPoints(match.id, 'other@example.com')).toBeNull();
+  });
+
+  it('notifies open spectator views when another tab updates match data', () => {
+    const initialCompetitionVersion = service.competitionVersion();
+
+    window.dispatchEvent(new StorageEvent('storage', { key: 'gestion-tournoi-competition' }));
+
+    expect(service.competitionVersion()).toBe(initialCompetitionVersion + 1);
   });
 
   it('does not allow overlapping matches for a team or a venue', () => {
@@ -169,5 +178,27 @@ describe('TournamentService', () => {
     expect(service.toggleFollowTournament(tournament.id)).toBe(true);
     expect(service.getFollowedTournamentIds()).toEqual([tournament.id]);
     expect(service.createTeam(tournament.id, 'C', 5)).toBeNull();
+  });
+
+  it('lists only the matches assigned to the connected arbitre', () => {
+    auth.register('Organizer', 'organizer@example.com', 'password123', 'organisateur');
+    const tournament = service.createTournament(tournamentInput)!;
+    const homeTeam = service.createTeam(tournament.id, 'Les Aigles', 5)!;
+    const awayTeam = service.createTeam(tournament.id, 'Les Lions', 5)!;
+
+    auth.register('Arbitre', 'referee@example.com', 'password123', 'arbitre');
+    expect(service.getRefereeMatches()).toEqual([]);
+    auth.login('organizer@example.com', 'password123');
+
+    const match = service.createMatch(tournament.id, {
+      ...matchInput,
+      refereeEmail: 'REFEREE@example.com',
+      homeTeamId: homeTeam.id,
+      awayTeamId: awayTeam.id,
+    })!;
+    expect(match.refereeEmail).toBe('referee@example.com');
+
+    auth.login('referee@example.com', 'password123');
+    expect(service.getRefereeMatches()).toEqual([match]);
   });
 });

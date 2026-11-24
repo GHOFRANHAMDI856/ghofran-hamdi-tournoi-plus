@@ -283,6 +283,7 @@
 .dashboard-page .spectator-reset { min-height: 36px; justify-self: start; }
 .dashboard-page .followed-tournament { display: grid; gap: 8px; }
 .dashboard-page .followed-tournament > h3 { margin: 8px 0 0; color: #e6dcef; font-size: 12px; }
+.dashboard-page .referee-tournament-name { margin: 10px 0 0; color: #e6dcef; font-size: 11px; }
 .dashboard-page .request-status.approved { color: #91d6ad; }
 .dashboard-page .request-status.rejected { color: #efa8b8; }
 
@@ -298,71 +299,216 @@
   .dashboard-page .spectator-filters { grid-template-columns: 1fr; }
 }
 
-.dashboard-page .role-space { --role-accent: #d7b1ff; --role-border: rgba(197,151,240,.2); }
-.dashboard-page .organizer-space { --role-accent: #d7b1ff; --role-border: rgba(197,151,240,.22); }
-.dashboard-page .player-space { --role-accent: #a4e6ff; --role-border: rgba(105,191,224,.24); }
-.dashboard-page .spectator-space { --role-accent: #c9efb6; --role-border: rgba(132,194,111,.23); }
-.dashboard-page .referee-space { --role-accent: #ffbf78; --role-border: rgba(242,157,72,.25); }
+.dashboard-page .role-space {
+  --role-accent: #7045ad;
+  --role-border: rgba(137,94,198,.22);
+}
 .dashboard-page .role-space .dashboard-eyebrow { color: var(--role-accent); }
-.dashboard-page .role-space .summary-card { border-color: var(--role-border); }
+.dashboard-page .role-space .summary-card {
+  border-color: var(--role-border);
+  background: linear-gradient(145deg, #fff, #f6f0ff);
+  box-shadow: 0 8px 26px rgba(87,59,126,.08);
+}
+.dashboard-page .role-space .summary-value { color: #3b2b50; }
+.dashboard-page .role-space .summary-label { color: #59476f; }
+.dashboard-page .role-space .summary-hint { color: #796d89; }
 .dashboard-page .role-space .role-section,
-.dashboard-page .role-space .tournament-section { border-color: var(--role-border); }
-.dashboard-page .role-space .sport-tag { border-color: var(--role-border); color: var(--role-accent); }
-.dashboard-page .role-space .tournament-heading h2 { color: #fbf8ff; }
-.dashboard-page .role-space .primary-action { border-color: var(--role-border); }
-.dashboard-page .organizer-space .role-section,
-.dashboard-page .organizer-space .tournament-section { background: linear-gradient(145deg, rgba(105,67,142,.17), rgba(24,20,33,.9)); }
-.dashboard-page .player-space .role-section { background: linear-gradient(145deg, rgba(43,107,136,.2), rgba(23,24,34,.91)); }
-.dashboard-page .player-space .summary-icon.purple { background: rgba(71,164,203,.22); color: #a8e7ff; }
-.dashboard-page .player-space .primary-action { background: linear-gradient(135deg, #398bb0, #286e92); color: #fff; }
-.dashboard-page .player-space .primary-action:hover { background: linear-gradient(135deg, #51a5ca, #347fa4); }
-.dashboard-page .player-space .request-status,
-.dashboard-page .player-space .personal-points strong { color: #a4e6ff; }
-.dashboard-page .spectator-space .role-section { background: linear-gradient(145deg, rgba(69,112,59,.19), rgba(24,24,32,.92)); }
-.dashboard-page .referee-space .role-section { background: linear-gradient(145deg, rgba(136,82,39,.2), rgba(24,20,33,.92)); }
-.dashboard-page .spectator-space .summary-icon.purple { background: rgba(114,164,83,.2); color: #d0f0b5; }
-.dashboard-page .spectator-space .primary-action,
-.dashboard-page .spectator-space .secondary-action { border-color: rgba(155,205,130,.28); }
-.dashboard-page .spectator-space .sport-tag,
-.dashboard-page .spectator-space .match-status { color: #c9efb6; }
-.dashboard-page .spectator-space .following-action { background: rgba(87,143,69,.17); }
-.dashboard-page .space-refresh-row { display: flex; justify-content: flex-end; margin: -5px 0 12px; }
+.dashboard-page .role-space .tournament-section {
+  border-color: var(--role-border);
+  background: linear-gradient(145deg, #fff, #f4edff);
+  box-shadow: 0 12px 30px rgba(87,59,126,.07);
+}
+.dashboard-page .role-space .tournament-heading h2 { color: #3b2b50; }
+.dashboard-page .role-space .tournament-heading p:not(.dashboard-eyebrow) { color: #726582; }
+.dashboard-page .role-space .sport-tag {
+  border-color: var(--role-border);
+  background: rgba(137,94,198,.08);
+  color: var(--role-accent);
+}
+.dashboard-page .role-space .primary-action {
+  border-color: var(--role-border);
+  background: linear-gradient(135deg, #8052c8, #a985e2);
+  color: #fff;
+}
+.dashboard-page .role-space .primary-action:hover { background: linear-gradient(135deg, #7045ad, #9470d0); }
+.dashboard-page .role-space .secondary-action {
+  border-color: var(--role-border);
+  background: #fff;
+  color: #7045ad;
+}
+.dashboard-page .role-space .summary-icon.purple {
+  background: rgba(133,88,198,.13);
+  color: #7345b9;
+}
+.dashboard-page .role-space .team-card,
+.dashboard-page .role-space .match-card,
+.dashboard-page .role-space .tournament-card {
+  border-color: var(--role-border);
+  background: linear-gradient(145deg, #fff, #faf7ff);
+  box-shadow: 0 6px 18px rgba(87,59,126,.06);
+}
+.dashboard-page .role-space .team-card h3,
+.dashboard-page .role-space .tournament-card h3,
+.dashboard-page .role-space .referee-tournament-name,
+.dashboard-page .role-space .followed-tournament > h3 { color: #3b2b50; }
+.dashboard-page .role-space .team-card p,
+.dashboard-page .role-space .tournament-meta span,
+.dashboard-page .role-space .tournament-description,
+.dashboard-page .role-space .tournament-rules p,
+.dashboard-page .role-space .match-heading { color: #726582; }
+.dashboard-page .role-space .tournament-meta strong,
+.dashboard-page .role-space .form-heading p { color: #796d89; }
+.dashboard-page .role-space .form-heading h3 { color: #3b2b50; }
+.dashboard-page .role-space .tournament-placeholder {
+  border-color: var(--role-border);
+  color: #726582;
+}
+.dashboard-page .role-space .tournament-rules { color: #7045ad; }
+.dashboard-page .role-space .small-empty {
+  border-color: var(--role-border);
+  color: #726582;
+}
+.dashboard-page .role-space .request-status,
+.dashboard-page .role-space .match-status {
+  border-color: var(--role-border);
+  background: rgba(137,94,198,.08);
+  color: #7045ad;
+}
+.dashboard-page .role-space .request-status.approved { color: #438565; }
+.dashboard-page .role-space .request-status.rejected { color: #a64e68; }
+.dashboard-page .role-space .player-match-result { color: #59476f; }
+.dashboard-page .role-space .player-match-result strong { color: #7045ad; }
+.dashboard-page .role-space .primary-action.following-action,
+.dashboard-page .role-space .following-action {
+  background: linear-gradient(135deg, #8052c8, #a985e2);
+  color: #fff;
+}
+.dashboard-page .role-space input,
+.dashboard-page .role-space select,
+.dashboard-page .role-space textarea {
+  border-color: rgba(137,94,198,.22);
+  background: #fff;
+  color: #3b2b50;
+}
+.dashboard-page .role-space input:focus,
+.dashboard-page .role-space select:focus,
+.dashboard-page .role-space textarea:focus {
+  border-color: #9b76d1;
+  box-shadow: 0 0 0 3px rgba(137,94,198,.13);
+}
+.dashboard-page .role-space .tournament-form,
+.dashboard-page .role-space .inline-form,
+.dashboard-page .role-space .management-panel {
+  border-color: rgba(137,94,198,.18);
+  background: rgba(255,255,255,.76);
+}
+.dashboard-page .role-space .tournament-field label,
+.dashboard-page .role-space .inline-form label,
+.dashboard-page .role-space .management-panel h4,
+.dashboard-page .role-space .management-panel h5,
+.dashboard-page .role-space .subsection-title,
+.dashboard-page .role-space .subsection-heading h4 { color: #59476f; }
+.dashboard-page .role-space .subsection-heading p,
+.dashboard-page .role-space .compact-row small,
+.dashboard-page .role-space .team-members-list > span { color: #726582; }
+.dashboard-page .role-space .compact-row {
+  border-color: rgba(137,94,198,.14);
+  background: rgba(255,255,255,.75);
+}
+.dashboard-page .role-space .compact-row strong { color: #3b2b50; }
+.dashboard-page .role-space .management-details { border-top-color: rgba(137,94,198,.16); }
+.dashboard-page .role-space .management-details > summary { color: #7045ad; }
+.dashboard-page .role-space .player-match-result span { color: #59476f; }
+.dashboard-page .role-space .spectator-filters {
+  border-color: rgba(137,94,198,.18);
+  background: rgba(255,255,255,.7);
+}
+.dashboard-page .role-space .spectator-filter label { color: #59476f; }
+.dashboard-page .role-space .spectator-filter input,
+.dashboard-page .role-space .spectator-filter select {
+  border-color: rgba(137,94,198,.22);
+  background: #fff;
+  color: #3b2b50;
+}
+.dashboard-page .role-space .tournament-no-scores { color: #796d89 !important; }
+.dashboard-page .tournament-score-list { margin: 12px 0; }
+.dashboard-page .space-refresh-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin: -5px 0 12px;
+}
+.dashboard-page .space-refresh-row [role="status"] { color: #726582; font-size: 9px; }
+.dashboard-page .space-refresh-row .secondary-action {
+  border-color: rgba(137,94,198,.28);
+  background: #fff;
+  color: #7045ad;
+}
+.dashboard-page.role-theme {
+  color: #342448;
+  background:
+    radial-gradient(ellipse at 82% 2%, rgba(173,137,231,.36), transparent 36%),
+    radial-gradient(ellipse at 46% 92%, rgba(207,187,245,.38), transparent 42%),
+    linear-gradient(135deg, #fff, #f8f4ff 58%, #eee5fb);
+}
+.dashboard-page.role-theme .dashboard-sidebar {
+  border-right-color: rgba(105,72,151,.14);
+  background: rgba(255,255,255,.9);
+}
+.dashboard-page.role-theme .dashboard-topbar {
+  border-bottom-color: rgba(105,72,151,.14);
+  background: rgba(255,255,255,.8);
+}
+.dashboard-page.role-theme .brand-copy strong,
+.dashboard-page.role-theme .sidebar-user-copy strong { color: #35234d; }
+.dashboard-page.role-theme .brand-copy small,
+.dashboard-page.role-theme .sidebar-label { color: #786991; }
+.dashboard-page.role-theme .brand-mark {
+  background: linear-gradient(145deg, #a27ad9, #7045ad 75%);
+}
+.dashboard-page.role-theme .nav-item { color: #655878; }
+.dashboard-page.role-theme .nav-item.active {
+  border-color: rgba(137,94,198,.25);
+  background: linear-gradient(90deg, rgba(153,115,209,.2), rgba(222,207,244,.48));
+  color: #573887;
+}
+.dashboard-page.role-theme .sidebar-user {
+  border-color: rgba(105,72,151,.14);
+  background: rgba(248,244,255,.9);
+}
+.dashboard-page.role-theme .user-avatar {
+  border-color: rgba(137,94,198,.24);
+  background: linear-gradient(145deg, #eee4fb, #d9c7f1);
+  color: #7045ad;
+}
+.dashboard-page.role-theme .sidebar-user-copy small,
+.dashboard-page.role-theme .logout-button,
+.dashboard-page.role-theme .breadcrumbs { color: #766b84; }
+.dashboard-page.role-theme .breadcrumbs strong { color: #4a3861; }
+.dashboard-page.role-theme .local-badge {
+  border-color: rgba(137,94,198,.18);
+  background: rgba(255,255,255,.78);
+  color: #5c4a73;
+}
+.dashboard-page.role-theme .local-badge > span { background: #9c74d4; box-shadow: 0 0 10px #9c74d4; }
+.dashboard-page.role-theme h1 { color: #342448; }
+.dashboard-page.role-theme .dashboard-eyebrow,
+.dashboard-page.role-theme .welcome-dot { color: #7547bb; }
+.dashboard-page.role-theme .welcome-copy { color: #726582; }
+.dashboard-page.role-theme .date-card {
+  border-color: rgba(137,94,198,.18);
+  background: rgba(255,255,255,.8);
+}
+.dashboard-page.role-theme .date-card small { color: #766b84; }
+.dashboard-page.role-theme .date-card strong { color: #49365f; }
+.dashboard-page.role-theme .date-icon {
+  background: rgba(137,94,198,.12);
+  color: #7045ad;
+}
 .dashboard-page button:focus-visible,
 .dashboard-page a:focus-visible,
-.dashboard-page summary:focus-visible { outline: 2px solid #d5b2ff; outline-offset: 3px; }
-.dashboard-page.player-theme {
-  background:
-    radial-gradient(ellipse at 82% 2%, rgba(84,166,202,.29), transparent 36%),
-    radial-gradient(ellipse at 46% 92%, rgba(51,119,150,.2), transparent 42%),
-    linear-gradient(135deg, #121a22, #172732 58%, #131b24);
-}
-.dashboard-page.spectator-theme {
-  background:
-    radial-gradient(ellipse at 82% 2%, rgba(126,176,91,.25), transparent 36%),
-    radial-gradient(ellipse at 46% 92%, rgba(82,137,69,.19), transparent 42%),
-    linear-gradient(135deg, #171b18, #20271f 58%, #181d19);
-}
-.dashboard-page.referee-theme {
-  background:
-    radial-gradient(ellipse at 82% 2%, rgba(206,133,66,.25), transparent 36%),
-    radial-gradient(ellipse at 46% 92%, rgba(140,83,39,.19), transparent 42%),
-    linear-gradient(135deg, #1d1916, #2a211b 58%, #1b1714);
-}
-.dashboard-page.player-theme .brand-mark { background: linear-gradient(145deg, #55a9ce, #307d9f 75%); }
-.dashboard-page.spectator-theme .brand-mark { background: linear-gradient(145deg, #8ebd69, #5e8e4a 75%); }
-.dashboard-page.referee-theme .brand-mark { background: linear-gradient(145deg, #e59b51, #aa642d 75%); }
-.dashboard-page.player-theme .nav-item.active { border-color: rgba(125,205,235,.28); background: linear-gradient(90deg, rgba(62,151,185,.3), rgba(42,105,131,.14)); color: #d1f2ff; }
-.dashboard-page.spectator-theme .nav-item.active { border-color: rgba(163,205,134,.25); background: linear-gradient(90deg, rgba(93,143,69,.29), rgba(66,104,50,.14)); color: #e2f5d2; }
-.dashboard-page.referee-theme .nav-item.active { border-color: rgba(242,172,99,.27); background: linear-gradient(90deg, rgba(173,104,48,.3), rgba(120,72,35,.14)); color: #ffe3c3; }
-.dashboard-page.player-theme .dashboard-eyebrow,
-.dashboard-page.player-theme .welcome-dot { color: #a4e6ff; }
-.dashboard-page.spectator-theme .dashboard-eyebrow,
-.dashboard-page.spectator-theme .welcome-dot { color: #c9efb6; }
-.dashboard-page.referee-theme .dashboard-eyebrow,
-.dashboard-page.referee-theme .welcome-dot { color: #ffbf78; }
-.dashboard-page.player-theme .local-badge > span { background: #8edbff; box-shadow: 0 0 10px #8edbff; }
-.dashboard-page.spectator-theme .local-badge > span { background: #b9e8a7; box-shadow: 0 0 10px #b9e8a7; }
-.dashboard-page.referee-theme .local-badge > span { background: #ffc98f; box-shadow: 0 0 10px #ffc98f; }
+.dashboard-page summary:focus-visible { outline: 2px solid #8052c8; outline-offset: 3px; }
 
 @media (max-width: 430px) {
   .dashboard-page .organizer-summary { grid-template-columns: 1fr; }

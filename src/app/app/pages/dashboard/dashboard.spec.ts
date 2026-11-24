@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
@@ -9,12 +10,15 @@ describe('Dashboard', () => {
   let signedInUser: AuthUser;
   const authStub = {
     getCurrentUser: () => signedInUser,
+    getArbitres: () => [],
     logout: () => undefined,
   };
   const tournamentServiceStub = {
+    competitionVersion: signal(0).asReadonly(),
     getMyTournaments: () => [],
     getPublicTournaments: () => [],
     getPublicMatches: () => [],
+    getRefereeMatches: () => [],
     getFollowedTournamentIds: () => [],
     getTeamDirectory: () => [],
     getMyTeams: () => [],

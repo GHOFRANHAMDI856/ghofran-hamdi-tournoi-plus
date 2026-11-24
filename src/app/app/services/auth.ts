@@ -114,6 +114,16 @@ export class Auth {
     return session ? JSON.parse(session) as AuthUser : null;
   }
 
+  getArbitres(): Array<Pick<AuthUser, 'name' | 'email'>> {
+    if (this.getCurrentUser()?.role !== 'organisateur') {
+      return [];
+    }
+
+    return this.getUsers()
+      .filter((user) => user.role === 'arbitre')
+      .map(({ name, email }) => ({ name, email }));
+  }
+
   private getUsers(): StoredUser[] {
     const users = localStorage.getItem(this.usersKey);
     const savedUsers = users ? JSON.parse(users) as Array<Omit<StoredUser, 'role'> & { role?: unknown }> : [];

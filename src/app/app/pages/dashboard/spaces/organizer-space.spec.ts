@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
+import { Auth } from '../../../services/auth';
 import { Tournament, TournamentMatch, TournamentTeam, TournamentService } from '../../../services/tournament';
 import { OrganizerSpace } from './organizer-space';
 
@@ -10,7 +11,6 @@ describe('OrganizerSpace', () => {
       ownerEmail: 'organizer@example.com',
       name: 'Coupe régionale',
       sport: 'Basketball',
-      category: 'U15',
       startDate: '2026-12-10',
       endDate: '2026-12-12',
       location: 'Gymnase municipal',
@@ -25,7 +25,6 @@ describe('OrganizerSpace', () => {
       ownerEmail: 'organizer@example.com',
       name: 'Tournoi d’hiver',
       sport: 'Basketball',
-      category: 'Seniors',
       startDate: '2026-12-20',
       endDate: '2026-12-22',
       location: 'Gymnase central',
@@ -91,7 +90,10 @@ describe('OrganizerSpace', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [OrganizerSpace],
-      providers: [{ provide: TournamentService, useValue: tournamentServiceStub }],
+      providers: [
+        { provide: Auth, useValue: { getArbitres: () => [] } },
+        { provide: TournamentService, useValue: tournamentServiceStub },
+      ],
     }).compileComponents();
   });
 

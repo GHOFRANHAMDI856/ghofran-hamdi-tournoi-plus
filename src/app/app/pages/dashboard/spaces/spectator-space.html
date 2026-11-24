@@ -18,7 +18,8 @@
 </section>
 
 <div class="space-refresh-row">
-  <button class="secondary-action" type="button" (click)="refreshSpace()">Actualiser les scores</button>
+  <span role="status">Les scores s’actualisent automatiquement après leur saisie.</span>
+  <button class="secondary-action" type="button" (click)="refreshSpace()">Actualiser la liste</button>
 </div>
 
 <section class="role-section" aria-labelledby="spectator-tournaments-title">
@@ -43,11 +44,11 @@
       <input id="tournament-date" type="date" [value]="dateFilter()" (change)="updateDateFilter($event)" />
     </div>
     <div class="spectator-filter">
-      <label for="tournament-category-filter">Catégorie</label>
-      <select id="tournament-category-filter" [value]="categoryFilter()" (change)="updateCategoryFilter($event)">
-        <option value="">Toutes les catégories</option>
-        @for (category of categories(); track category) {
-          <option [value]="category">{{ category }}</option>
+      <label for="tournament-sport-filter">Sport / catégorie</label>
+      <select id="tournament-sport-filter" [value]="sportFilter()" (change)="updateSportFilter($event)">
+        <option value="">Tous les sports</option>
+        @for (sport of sports; track sport) {
+          <option [value]="sport">{{ sport }}</option>
         }
       </select>
     </div>
@@ -57,9 +58,28 @@
     <div class="team-grid">
       @for (tournament of filteredTournaments(); track tournament.id) {
         <article class="team-card spectator-tournament-card">
-          <span class="sport-tag">{{ tournament.sport }} · {{ tournament.category || 'Catégorie à définir' }} · {{ formatStatus(tournament.status) }}</span>
+          <span class="sport-tag">{{ tournament.sport }} · {{ formatStatus(tournament.status) }}</span>
           <h3>{{ tournament.name }}</h3>
           <p>{{ formatDate(tournament.startDate) }} – {{ formatDate(tournament.endDate) }} · {{ tournament.location }}</p>
+          @if (getMatchesForTournament(tournament.id).length) {
+            <div class="match-list tournament-score-list" aria-label="Scores des matchs du tournoi">
+              @for (match of getMatchesForTournament(tournament.id); track match.id) {
+                <article class="match-card spectator-match">
+                  <div class="match-heading">
+                    <span class="match-status">{{ getMatchStatus(match) }}</span>
+                    <span>{{ formatDateTime(match.startAt) }} · {{ match.location }}</span>
+                  </div>
+                  <div class="player-match-result">
+                    <span>{{ getTeamName(match.homeTeamId) }}</span>
+                    <strong>{{ getScore(match) }}</strong>
+                    <span>{{ getTeamName(match.awayTeamId) }}</span>
+                  </div>
+                </article>
+              }
+            </div>
+          } @else {
+            <p class="tournament-no-scores">Aucun match planifié pour le moment.</p>
+          }
           <button
             class="secondary-action"
             [class.following-action]="isFollowing(tournament.id)"

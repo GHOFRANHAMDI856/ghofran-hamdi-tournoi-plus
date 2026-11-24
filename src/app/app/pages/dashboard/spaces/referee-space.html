@@ -1,0 +1,32 @@
+<div class="role-space referee-space">
+  <section class="role-section" aria-labelledby="referee-title">
+    <div class="tournament-heading">
+      <div>
+        <p class="dashboard-eyebrow">ESPACE ARBITRE</p>
+        <h2 id="referee-title">Mes désignations</h2>
+        <p>Les matchs qui vous sont attribués apparaissent ici.</p>
+      </div>
+    </div>
+
+    @if (matches().length) {
+      <div class="match-list">
+        @for (match of matches(); track match.id) {
+          <article class="match-card">
+            <div class="match-heading">
+              <span class="match-status">{{ getMatchStatus(match) }}</span>
+              <span>{{ formatDateTime(match.startAt) }} · {{ match.location }}</span>
+            </div>
+            <h3 class="referee-tournament-name">{{ getTournamentName(match) }}</h3>
+            <div class="player-match-result">
+              <span>{{ getTeamName(match.homeTeamId) }}</span>
+              <strong>{{ getScore(match) }}</strong>
+              <span>{{ getTeamName(match.awayTeamId) }}</span>
+            </div>
+          </article>
+        }
+      </div>
+    } @else {
+      <p class="small-empty">Aucun match ne vous est attribué pour le moment.</p>
+    }
+  </section>
+</div>

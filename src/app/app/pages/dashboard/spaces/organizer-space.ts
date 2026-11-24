@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
+import { Auth } from '../../../services/auth';
 import {
   MatchInput,
   TeamJoinRequest,
@@ -9,6 +10,7 @@ import {
   TournamentMatch,
   TournamentService,
   TournamentStatus,
+  TOURNAMENT_SPORTS,
   TournamentTeam,
 } from '../../../services/tournament';
 
@@ -20,12 +22,12 @@ import {
 })
 export class OrganizerSpace {
   private readonly formBuilder = inject(FormBuilder);
+  private readonly auth = inject(Auth);
   private readonly tournamentService = inject(TournamentService);
 
   readonly tournamentForm = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(80)]],
     sport: ['', [Validators.required, Validators.maxLength(50)]],
-    category: ['', [Validators.required, Validators.maxLength(60)]],
     startDate: ['', Validators.required],
     endDate: ['', Validators.required],
     location: ['', [Validators.required, Validators.maxLength(100)]],
@@ -35,6 +37,7 @@ export class OrganizerSpace {
     status: this.formBuilder.nonNullable.control<TournamentStatus>('open'),
     maxTeams: [16, [Validators.required, Validators.min(2), Validators.max(100)]],
   });
+  readonly sports: readonly string[] = TOURNAMENT_SPORTS;
   readonly teamForm = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(60)]],
     capacity: [8, [Validators.required, Validators.min(2), Validators.max(100)]],
@@ -45,7 +48,9 @@ export class OrganizerSpace {
     startAt: ['', Validators.required],
     endAt: ['', Validators.required],
     location: ['', [Validators.required, Validators.maxLength(100)]],
+    refereeEmail: [''],
   });
+  readonly referees = signal(this.auth.getArbitres());
   readonly tournaments = signal(this.tournamentService.getMyTournaments());
   readonly showTournamentForm = signal(false);
   readonly editingTournamentId = signal<string | null>(null);
@@ -125,7 +130,6 @@ export class OrganizerSpace {
     this.tournamentForm.reset({
       name: '',
       sport: '',
-      category: '',
       startDate: '',
       endDate: '',
       location: '',
@@ -145,7 +149,6 @@ export class OrganizerSpace {
     this.tournamentForm.reset({
       name: tournament.name,
       sport: tournament.sport,
-      category: tournament.category,
       startDate: tournament.startDate,
       endDate: tournament.endDate,
       location: tournament.location,
@@ -173,7 +176,6 @@ export class OrganizerSpace {
     this.trimRequired(
       this.tournamentForm.controls.name,
       this.tournamentForm.controls.sport,
-      this.tournamentForm.controls.category,
       this.tournamentForm.controls.location,
     );
     if (this.tournamentForm.invalid) {
@@ -191,7 +193,6 @@ export class OrganizerSpace {
       ...values,
       name: values.name.trim(),
       sport: values.sport.trim(),
-      category: values.category.trim(),
       location: values.location.trim(),
       description: values.description.trim(),
       rules: values.rules.trim(),
@@ -301,6 +302,7 @@ export class OrganizerSpace {
   }
 
   openMatchForm(tournamentId: string): void {
+    this.referees.set(this.auth.getArbitres());
     this.editingMatchId.set(null);
     this.matchForm.reset({
       homeTeamId: '',
@@ -308,11 +310,13 @@ export class OrganizerSpace {
       startAt: '',
       endAt: '',
       location: '',
+      refereeEmail: '',
     });
     this.showMatchFormFor.set(tournamentId);
   }
 
   editMatch(match: TournamentMatch): void {
+    this.referees.set(this.auth.getArbitres());
     this.editingMatchId.set(match.id);
     this.matchForm.reset({
       homeTeamId: match.homeTeamId,
@@ -320,6 +324,7 @@ export class OrganizerSpace {
       startAt: match.startAt,
       endAt: match.endAt,
       location: match.location,
+      refereeEmail: match.refereeEmail ?? '',
     });
     this.showMatchFormFor.set(match.tournamentId);
   }
@@ -335,6 +340,7 @@ export class OrganizerSpace {
     const input: MatchInput = {
       ...this.matchForm.getRawValue(),
       location: this.matchForm.controls.location.value.trim(),
+      refereeEmail: this.matchForm.controls.refereeEmail.value.trim().toLowerCase(),
     };
     const editingId = this.editingMatchId();
     const success = editingId

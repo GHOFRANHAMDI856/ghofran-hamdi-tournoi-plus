@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
-import { Tournament, TournamentMatch, TournamentService } from '../../../services/tournament';
+import { TOURNAMENT_SPORTS, Tournament, TournamentMatch, TournamentService } from '../../../services/tournament';
 
 @Component({
   selector: 'app-spectator-space',
@@ -11,32 +11,33 @@ export class SpectatorSpace {
   private readonly tournamentService = inject(TournamentService);
 
   readonly tournaments = signal(this.tournamentService.getPublicTournaments());
-  readonly matches = signal(this.tournamentService.getPublicMatches());
+  readonly matches = computed(() => {
+    this.tournamentService.competitionVersion();
+    return this.tournamentService.getPublicMatches();
+  });
   readonly followedTournamentIds = signal(this.tournamentService.getFollowedTournamentIds());
   readonly searchTerm = signal('');
   readonly cityFilter = signal('');
   readonly dateFilter = signal('');
-  readonly categoryFilter = signal('');
-  readonly categories = computed(() => [...new Set(
-    this.tournaments().map((tournament) => tournament.category.trim()).filter(Boolean),
-  )].sort((first, second) => first.localeCompare(second, 'fr')));
+  readonly sportFilter = signal('');
+  readonly sports: readonly string[] = TOURNAMENT_SPORTS;
   readonly filteredTournaments = computed(() => {
     const searchTerm = this.searchTerm().trim().toLocaleLowerCase('fr');
     const cityFilter = this.cityFilter().trim().toLocaleLowerCase('fr');
     const dateFilter = this.dateFilter();
-    const categoryFilter = this.categoryFilter();
+    const sportFilter = this.sportFilter().toLocaleLowerCase('fr');
 
     return this.tournaments().filter((tournament) => {
-      const searchableText = `${tournament.name} ${tournament.location} ${tournament.category}`
+      const searchableText = `${tournament.name} ${tournament.location} ${tournament.sport}`
         .toLocaleLowerCase('fr');
       const matchesSearch = !searchTerm || searchableText.includes(searchTerm);
       const matchesCity = !cityFilter || tournament.location.toLocaleLowerCase('fr').includes(cityFilter);
       const matchesDate = !dateFilter || (
         tournament.startDate <= dateFilter && tournament.endDate >= dateFilter
       );
-      const matchesCategory = !categoryFilter || tournament.category === categoryFilter;
+      const matchesSport = !sportFilter || tournament.sport.toLocaleLowerCase('fr') === sportFilter;
 
-      return matchesSearch && matchesCity && matchesDate && matchesCategory;
+      return matchesSearch && matchesCity && matchesDate && matchesSport;
     });
   });
   readonly liveMatches = computed(() =>
@@ -53,7 +54,6 @@ export class SpectatorSpace {
 
   refreshSpace(): void {
     this.tournaments.set(this.tournamentService.getPublicTournaments());
-    this.matches.set(this.tournamentService.getPublicMatches());
     this.followedTournamentIds.set(this.tournamentService.getFollowedTournamentIds());
   }
 
@@ -69,15 +69,15 @@ export class SpectatorSpace {
     this.dateFilter.set((event.target as HTMLInputElement).value);
   }
 
-  updateCategoryFilter(event: Event): void {
-    this.categoryFilter.set((event.target as HTMLSelectElement).value);
+  updateSportFilter(event: Event): void {
+    this.sportFilter.set((event.target as HTMLSelectElement).value);
   }
 
   resetFilters(): void {
     this.searchTerm.set('');
     this.cityFilter.set('');
     this.dateFilter.set('');
-    this.categoryFilter.set('');
+    this.sportFilter.set('');
   }
 
   isFollowing(tournamentId: string): boolean {
@@ -93,7 +93,7 @@ export class SpectatorSpace {
   }
 
   getMatchesForTournament(tournamentId: string): TournamentMatch[] {
-    return this.followedMatches().filter((match) => match.tournamentId === tournamentId);
+    return this.matches().filter((match) => match.tournamentId === tournamentId);
   }
 
   getMatchStatus(match: TournamentMatch): string {

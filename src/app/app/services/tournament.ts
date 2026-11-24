@@ -1,16 +1,16 @@
-import { Injectable, inject } from '@angular/core';
+import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 
 import { Auth } from './auth';
 
 export type TournamentStatus = 'draft' | 'open' | 'in_progress' | 'completed';
 export type TournamentFormat = 'elimination' | 'league' | 'groups';
+export const TOURNAMENT_SPORTS = ['Basketball', 'Football', 'Volleyball', 'Handball'] as const;
 
 export interface Tournament {
   id: string;
   ownerEmail: string;
   name: string;
   sport: string;
-  category: string;
   startDate: string;
   endDate: string;
   location: string;
@@ -46,6 +46,7 @@ export interface TournamentMatch {
   id: string;
   tournamentId: string;
   ownerEmail: string;
+  refereeEmail?: string;
   homeTeamId: string;
   awayTeamId: string;
   startAt: string;
@@ -57,6 +58,7 @@ export interface TournamentMatch {
 }
 
 export interface MatchInput {
+  refereeEmail: string;
   homeTeamId: string;
   awayTeamId: string;
   startAt: string;
@@ -80,7 +82,7 @@ interface SavedTournament {
   id: string;
   ownerEmail: string;
   name: string;
-  sport: string;
+  sport?: string;
   category?: string;
   startDate?: string;
   endDate?: string;
@@ -100,6 +102,19 @@ export class TournamentService {
   private readonly auth = inject(Auth);
   private readonly tournamentsKey = 'gestion-tournoi-tournaments';
   private readonly competitionKey = 'gestion-tournoi-competition';
+  private readonly competitionVersionState = signal(0);
+  readonly competitionVersion = this.competitionVersionState.asReadonly();
+  private readonly handleStorageChange = (event: StorageEvent): void => {
+    if (event.key === this.competitionKey) {
+      this.competitionVersionState.update((version) => version + 1);
+    }
+  };
+
+  constructor() {
+    const destroyRef = inject(DestroyRef);
+    window.addEventListener('storage', this.handleStorageChange);
+    destroyRef.onDestroy(() => window.removeEventListener('storage', this.handleStorageChange));
+  }
 
   getMyTournaments(): Tournament[] {
     const ownerEmail = this.getOrganizerEmail();
@@ -396,6 +411,7 @@ export class TournamentService {
 
     const match: TournamentMatch = {
       ...input,
+      refereeEmail: input.refereeEmail.trim().toLowerCase(),
       id: crypto.randomUUID(),
       tournamentId,
       ownerEmail,
@@ -421,7 +437,10 @@ export class TournamentService {
       return false;
     }
 
-    Object.assign(match, input);
+    Object.assign(match, {
+      ...input,
+      refereeEmail: input.refereeEmail.trim().toLowerCase(),
+    });
     this.saveCompetitionData(data);
     return true;
   }
@@ -450,6 +469,15 @@ export class TournamentService {
   getPublicMatches(): TournamentMatch[] {
     const tournamentIds = this.getPublicTournaments().map((tournament) => tournament.id);
     return this.getCompetitionData().matches.filter((match) => tournamentIds.includes(match.tournamentId));
+  }
+
+  getRefereeMatches(): TournamentMatch[] {
+    const refereeEmail = this.getRefereeEmail();
+    return refereeEmail
+      ? this.getCompetitionData().matches.filter(
+        (match) => match.refereeEmail?.trim().toLowerCase() === refereeEmail,
+      ).sort((first, second) => first.startAt.localeCompare(second.startAt))
+      : [];
   }
 
   deleteMatch(matchId: string): boolean {
@@ -579,6 +607,11 @@ export class TournamentService {
     return user?.role === 'spectateur' ? user.email : null;
   }
 
+  private getRefereeEmail(): string | null {
+    const user = this.auth.getCurrentUser();
+    return user?.role === 'arbitre' ? user.email.trim().toLowerCase() : null;
+  }
+
   private getOwnedTournament(tournamentId: string, ownerEmail: string | null): Tournament | null {
     return ownerEmail
       ? this.getAllTournaments().find(
@@ -594,8 +627,7 @@ export class TournamentService {
       id: tournament.id,
       ownerEmail: tournament.ownerEmail,
       name: tournament.name,
-      sport: tournament.sport,
-      category: tournament.category ?? '',
+      sport: tournament.sport ?? tournament.category ?? '',
       startDate: tournament.startDate ?? tournament.date ?? '',
       endDate: tournament.endDate ?? tournament.date ?? '',
       location: tournament.location ?? '',
@@ -628,6 +660,7 @@ export class TournamentService {
 
   private saveCompetitionData(data: CompetitionData): void {
     localStorage.setItem(this.competitionKey, JSON.stringify(data));
+    this.competitionVersionState.update((version) => version + 1);
   }
 
   private isValidMatchInput(
@@ -644,7 +677,12 @@ export class TournamentService {
       || !input.endAt
       || new Date(input.startAt).getTime() >= new Date(input.endAt).getTime()
       || !input.location.trim()
+      || typeof input.refereeEmail !== 'string'
     ) {
+      return false;
+    }
+    const refereeEmail = input.refereeEmail.trim().toLowerCase();
+    if (refereeEmail && !this.auth.getArbitres().some((referee) => referee.email === refereeEmail)) {
       return false;
     }
 
@@ -685,7 +723,6 @@ export class TournamentService {
     return Boolean(
       input.name.trim()
       && input.sport.trim()
-      && input.category.trim()
       && input.location.trim()
       && Number.isFinite(start)
       && Number.isFinite(end)
