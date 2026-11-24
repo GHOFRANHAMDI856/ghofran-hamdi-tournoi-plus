@@ -4,7 +4,17 @@
   "tasks": [
     {
       "type": "npm",
+      "script": "start:backend",
+      "path": "",
+      "label": "npm: start (backend)",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "type": "npm",
       "script": "start",
+      "path": "frontend",
+      "label": "npm: start (frontend)",
       "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",
@@ -23,6 +33,8 @@
     {
       "type": "npm",
       "script": "test",
+      "path": "frontend",
+      "label": "npm: test (frontend)",
       "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",

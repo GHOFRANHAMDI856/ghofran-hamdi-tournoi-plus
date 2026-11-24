@@ -32,10 +32,6 @@
   </div>
   <div class="spectator-filters" role="search" aria-label="Rechercher un tournoi">
     <div class="spectator-filter">
-      <label for="tournament-search">Rechercher un tournoi</label>
-      <input id="tournament-search" type="search" [value]="searchTerm()" (input)="updateSearchTerm($event)" placeholder="Nom, lieu ou catégorie" />
-    </div>
-    <div class="spectator-filter">
       <label for="tournament-city">Ville</label>
       <input id="tournament-city" type="text" [value]="cityFilter()" (input)="updateCityFilter($event)" placeholder="Saisir une ville" />
     </div>
@@ -44,11 +40,11 @@
       <input id="tournament-date" type="date" [value]="dateFilter()" (change)="updateDateFilter($event)" />
     </div>
     <div class="spectator-filter">
-      <label for="tournament-sport-filter">Sport / catégorie</label>
-      <select id="tournament-sport-filter" [value]="sportFilter()" (change)="updateSportFilter($event)">
-        <option value="">Tous les sports</option>
-        @for (sport of sports; track sport) {
-          <option [value]="sport">{{ sport }}</option>
+      <label for="tournament-category-filter">Catégorie</label>
+      <select id="tournament-category-filter" [value]="categoryFilter()" (change)="updateCategoryFilter($event)">
+        <option value="">Toutes les catégories</option>
+        @for (category of categories; track category) {
+          <option [value]="category">{{ category }}</option>
         }
       </select>
     </div>

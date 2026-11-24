@@ -16,28 +16,24 @@ export class SpectatorSpace {
     return this.tournamentService.getPublicMatches();
   });
   readonly followedTournamentIds = signal(this.tournamentService.getFollowedTournamentIds());
-  readonly searchTerm = signal('');
   readonly cityFilter = signal('');
   readonly dateFilter = signal('');
-  readonly sportFilter = signal('');
-  readonly sports: readonly string[] = TOURNAMENT_SPORTS;
+  readonly categoryFilter = signal('');
+  readonly categories: readonly string[] = TOURNAMENT_SPORTS;
   readonly filteredTournaments = computed(() => {
-    const searchTerm = this.searchTerm().trim().toLocaleLowerCase('fr');
     const cityFilter = this.cityFilter().trim().toLocaleLowerCase('fr');
     const dateFilter = this.dateFilter();
-    const sportFilter = this.sportFilter().toLocaleLowerCase('fr');
+    const categoryFilter = this.categoryFilter().toLocaleLowerCase('fr');
 
     return this.tournaments().filter((tournament) => {
-      const searchableText = `${tournament.name} ${tournament.location} ${tournament.sport}`
-        .toLocaleLowerCase('fr');
-      const matchesSearch = !searchTerm || searchableText.includes(searchTerm);
       const matchesCity = !cityFilter || tournament.location.toLocaleLowerCase('fr').includes(cityFilter);
       const matchesDate = !dateFilter || (
         tournament.startDate <= dateFilter && tournament.endDate >= dateFilter
       );
-      const matchesSport = !sportFilter || tournament.sport.toLocaleLowerCase('fr') === sportFilter;
+      const matchesCategory = !categoryFilter
+        || tournament.sport.toLocaleLowerCase('fr') === categoryFilter;
 
-      return matchesSearch && matchesCity && matchesDate && matchesSport;
+      return matchesCity && matchesDate && matchesCategory;
     });
   });
   readonly liveMatches = computed(() =>
@@ -57,10 +53,6 @@ export class SpectatorSpace {
     this.followedTournamentIds.set(this.tournamentService.getFollowedTournamentIds());
   }
 
-  updateSearchTerm(event: Event): void {
-    this.searchTerm.set((event.target as HTMLInputElement).value);
-  }
-
   updateCityFilter(event: Event): void {
     this.cityFilter.set((event.target as HTMLInputElement).value);
   }
@@ -69,15 +61,14 @@ export class SpectatorSpace {
     this.dateFilter.set((event.target as HTMLInputElement).value);
   }
 
-  updateSportFilter(event: Event): void {
-    this.sportFilter.set((event.target as HTMLSelectElement).value);
+  updateCategoryFilter(event: Event): void {
+    this.categoryFilter.set((event.target as HTMLSelectElement).value);
   }
 
   resetFilters(): void {
-    this.searchTerm.set('');
     this.cityFilter.set('');
     this.dateFilter.set('');
-    this.sportFilter.set('');
+    this.categoryFilter.set('');
   }
 
   isFollowing(tournamentId: string): boolean {
