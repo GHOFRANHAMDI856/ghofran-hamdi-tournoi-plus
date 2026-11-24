@@ -2,8 +2,13 @@
 <section class="summary-grid organizer-summary" aria-label="Vue d'ensemble organisateur">
   <article class="summary-card">
     <span class="summary-value">{{ activeTournaments() }}</span>
-    <span class="summary-label">Tournois actifs</span>
-    <span class="summary-hint">{{ upcomingTournaments() }} brouillon(s), {{ completedTournaments() }} terminé(s)</span>
+    <span class="summary-label">Tournois en cours</span>
+    <span class="summary-hint">{{ upcomingTournaments() }} à venir · {{ completedTournaments() }} terminés</span>
+  </article>
+  <article class="summary-card">
+    <span class="summary-value">{{ registeredPlayers() }}</span>
+    <span class="summary-label">Joueurs inscrits</span>
+    <span class="summary-hint">{{ draftTournaments() }} brouillon(s)</span>
   </article>
   <article class="summary-card">
     <span class="summary-value">{{ pendingRegistrations() }}</span>
@@ -122,7 +127,7 @@
             <div>
               <span class="sport-tag">{{ tournament.sport }} · {{ formatFormat(tournament.format) }}</span>
               <h3>{{ tournament.name }}</h3>
-              <span class="tournament-status">{{ formatStatus(tournament.status) }}</span>
+              <span class="tournament-status">{{ getTournamentPhase(tournament) }} · {{ formatStatus(tournament.status) }}</span>
             </div>
             <div class="tournament-card-actions">
               <button class="secondary-action" type="button" (click)="editTournament(tournament)">Modifier</button>
@@ -166,6 +171,13 @@
                         <span><strong>{{ team.name }}</strong><small>{{ team.memberEmails.length }} / {{ team.capacity }} joueurs</small></span>
                         <button class="delete-action" type="button" (click)="deleteTeam(team)">Supprimer</button>
                       </div>
+                      @if (team.memberEmails.length) {
+                        <div class="team-members-list">
+                          @for (playerEmail of team.memberEmails; track playerEmail) {
+                            <span>{{ playerEmail }}<button class="text-action danger-text" type="button" (click)="removePlayer(team, playerEmail)">Retirer</button></span>
+                          }
+                        </div>
+                      }
                     }
                   </div>
                 } @else {
@@ -191,8 +203,6 @@
                   <p class="small-empty">Aucune demande d’inscription.</p>
                 }
               </section>
-              </div>
-              </div>
 
               <section class="management-panel" aria-label="Gestion des matchs">
                 <div class="subsection-heading">

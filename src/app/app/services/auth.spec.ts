@@ -94,5 +94,13 @@ describe('Auth', () => {
 
     expect(result.success).toBe(false);
     expect(result.message).toContain('type de compte valide');
+
+    const teamRoleResult = Reflect.apply(service.register, service, [
+      'Team User',
+      'team@example.com',
+      'password123',
+      'equipe',
+    ]);
+    expect(teamRoleResult.success).toBe(false);
   });
 });

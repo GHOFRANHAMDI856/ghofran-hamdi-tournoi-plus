@@ -56,6 +56,30 @@ describe('TournamentService', () => {
     expect(service.getMyTournaments()).toEqual([]);
   });
 
+  it('migrates tournaments saved with the previous single-date field', () => {
+    auth.register('Organizer', 'organizer@example.com', 'password123', 'organisateur');
+    localStorage.setItem(
+      'gestion-tournoi-tournaments',
+      JSON.stringify([{
+        id: 'legacy-tournament',
+        ownerEmail: 'organizer@example.com',
+        name: 'Ancien tournoi',
+        sport: 'Football',
+        date: '2026-12-10',
+        location: 'Stade municipal',
+        description: '',
+        rules: '',
+      }]),
+    );
+
+    expect(service.getMyTournaments()[0]).toMatchObject({
+      startDate: '2026-12-10',
+      endDate: '2026-12-10',
+      status: 'open',
+      maxTeams: 16,
+    });
+  });
+
   it('keeps tournament management private to its organizer', () => {
     auth.register('Organizer One', 'one@example.com', 'password123', 'organisateur');
     const tournament = service.createTournament(tournamentInput)!;
@@ -80,6 +104,8 @@ describe('TournamentService', () => {
     expect(service.getTeamDirectory()).toHaveLength(2);
     const request = service.requestToJoin(homeTeam.id)!;
     expect(service.getMyJoinRequests()).toEqual([request]);
+    expect(service.getTeamDirectory()).toEqual([]);
+    expect(service.requestToJoin(awayTeam.id)).toBeNull();
 
     auth.login('organizer@example.com', 'password123');
     expect(service.reviewJoinRequest(request.id, true)).toBe(true);

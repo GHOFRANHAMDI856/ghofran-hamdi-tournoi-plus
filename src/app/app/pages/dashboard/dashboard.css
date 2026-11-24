@@ -209,7 +209,7 @@
   .dashboard-page .tournament-card-heading { flex-direction: column; }
 }
 
-.dashboard-page .organizer-summary { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.dashboard-page .organizer-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .dashboard-page .role-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .dashboard-page .tournament-field select, .dashboard-page .inline-form select { width: 100%; min-height: 36px; padding: 8px 10px; border: 1px solid rgba(255,255,255,.11); border-radius: 7px; outline: 0; background: #17131f; color: #eee8f5; font: inherit; font-size: 10px; }
 .dashboard-page .tournament-field select:focus, .dashboard-page .inline-form select:focus { border-color: #a877d5; box-shadow: 0 0 0 3px rgba(168,119,213,.13); }
@@ -243,6 +243,8 @@
 .dashboard-page .compact-row small { color: #837b8c; font-size: 8px; }
 .dashboard-page .compact-row .request-status { margin-top: 0; }
 .dashboard-page .compact-actions { display: flex; flex-wrap: wrap; gap: 5px; }
+.dashboard-page .team-members-list { display: grid; gap: 5px; padding: 6px 9px; }
+.dashboard-page .team-members-list > span { display: flex; align-items: center; justify-content: space-between; gap: 8px; overflow: hidden; color: #a9a0b2; font-size: 8px; }
 .dashboard-page .compact-actions button, .dashboard-page .compact-row > button { min-height: 29px; padding: 0 8px; font-size: 8px; }
 .dashboard-page .match-card { padding: 12px; border: 1px solid rgba(255,255,255,.075); border-radius: 9px; background: rgba(255,255,255,.025); }
 .dashboard-page .match-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: #91899a; font-size: 8px; }

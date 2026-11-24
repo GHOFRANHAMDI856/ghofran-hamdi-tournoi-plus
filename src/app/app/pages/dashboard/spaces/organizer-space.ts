@@ -53,14 +53,24 @@ export class OrganizerSpace {
   readonly editingMatchId = signal<string | null>(null);
   readonly message = signal('');
   readonly error = signal('');
-  readonly activeTournaments = computed(() => this.tournaments().filter(
-      (tournament) => tournament.status === 'open' || tournament.status === 'in_progress',
-    ).length);
+  readonly activeTournaments = computed(() =>
+    this.tournaments().filter((tournament) => this.getTournamentPhase(tournament) === 'En cours').length,
+  );
   readonly upcomingTournaments = computed(() =>
-    this.tournaments().filter((tournament) => tournament.status === 'draft').length,
+    this.tournaments().filter((tournament) => this.getTournamentPhase(tournament) === 'À venir').length,
   );
   readonly completedTournaments = computed(() =>
-    this.tournaments().filter((tournament) => tournament.status === 'completed').length,
+    this.tournaments().filter((tournament) => this.getTournamentPhase(tournament) === 'Terminé').length,
+  );
+  readonly draftTournaments = computed(() =>
+    this.tournaments().filter((tournament) => tournament.status === 'draft').length,
+  );
+  readonly registeredPlayers = computed(() =>
+    this.tournaments().reduce(
+      (total, tournament) => total + this.getTeams(tournament.id)
+        .reduce((teamTotal, team) => teamTotal + team.memberEmails.length, 0),
+      0,
+    ),
   );
   readonly pendingRegistrations = computed(() =>
     this.tournaments().reduce(
@@ -233,6 +243,17 @@ export class OrganizerSpace {
     this.message.set('Équipe supprimée.');
   }
 
+  removePlayer(team: TournamentTeam, playerEmail: string): void {
+    if (!this.tournamentService.removePlayerFromTeam(team.id, playerEmail)) {
+      this.error.set('Impossible de retirer ce joueur de l’équipe.');
+      return;
+    }
+
+    this.refresh();
+    this.error.set('');
+    this.message.set(`${playerEmail} a été retiré de ${team.name}.`);
+  }
+
   reviewRegistration(request: TeamJoinRequest, approved: boolean): void {
     const success = this.tournamentService.reviewJoinRequest(request.id, approved);
     if (!success) {
@@ -371,6 +392,21 @@ export class OrganizerSpace {
     }[status];
   }
 
+  getTournamentPhase(tournament: Tournament): string {
+    const today = this.getLocalDate();
+    if (tournament.status === 'completed' || tournament.endDate < today) {
+      return 'Terminé';
+    }
+    if (tournament.status === 'draft') {
+      return 'Brouillon';
+    }
+    if (tournament.status === 'in_progress'
+      || (tournament.startDate <= today && tournament.endDate >= today)) {
+      return 'En cours';
+    }
+    return 'À venir';
+  }
+
   formatFormat(format: TournamentFormat): string {
     return {
       elimination: 'Élimination directe',
@@ -381,6 +417,11 @@ export class OrganizerSpace {
 
   private refresh(): void {
     this.tournaments.set(this.tournamentService.getMyTournaments());
+  }
+
+  private getLocalDate(): string {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   }
 
   private trimRequired(...controls: Array<{ value: string; setErrors: (errors: Record<string, boolean> | null) => void; markAsTouched: () => void }>): void {

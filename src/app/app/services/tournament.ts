@@ -20,19 +20,6 @@ export interface Tournament {
   maxTeams: number;
 }
 
-removePlayerFromTeam(teamId: string, playerEmail: string): boolean {
-  const ownerEmail = this.getOrganizerEmail();
-  const data = this.getCompetitionData();
-  const team = data.teams.find((item) => item.id === teamId && item.ownerEmail === ownerEmail);
-  if (!ownerEmail || !team || !team.memberEmails.includes(playerEmail)) {
-    return false;
-  }
-
-  team.memberEmails = team.memberEmails.filter((email) => email !== playerEmail);
-  this.saveCompetitionData(data);
-  return true;
-}
-
 export type TournamentInput = Omit<Tournament, 'id' | 'ownerEmail'>;
 
 export interface TournamentTeam {
@@ -86,6 +73,22 @@ interface CompetitionData {
   joinRequests: TeamJoinRequest[];
   matches: TournamentMatch[];
   followedTournaments: FollowedTournaments[];
+}
+
+interface SavedTournament {
+  id: string;
+  ownerEmail: string;
+  name: string;
+  sport: string;
+  startDate?: string;
+  endDate?: string;
+  date?: string;
+  location?: string;
+  description?: string;
+  rules?: string;
+  format?: TournamentFormat;
+  status?: TournamentStatus;
+  maxTeams?: number;
 }
 
 @Injectable({
@@ -241,6 +244,19 @@ export class TournamentService {
     return true;
   }
 
+  removePlayerFromTeam(teamId: string, playerEmail: string): boolean {
+    const ownerEmail = this.getOrganizerEmail();
+    const data = this.getCompetitionData();
+    const team = data.teams.find((item) => item.id === teamId && item.ownerEmail === ownerEmail);
+    if (!ownerEmail || !team || !team.memberEmails.includes(playerEmail)) {
+      return false;
+    }
+
+    team.memberEmails = team.memberEmails.filter((email) => email !== playerEmail);
+    this.saveCompetitionData(data);
+    return true;
+  }
+
   getTeamDirectory(): Array<{ team: TournamentTeam; tournament: Tournament }> {
     const playerEmail = this.getPlayerEmail();
     if (!playerEmail) {
@@ -252,12 +268,17 @@ export class TournamentService {
     return tournaments.flatMap((tournament) =>
       data.teams
         .filter((team) => team.tournamentId === tournament.id && team.memberEmails.length < team.capacity)
-        .filter((team) => !team.memberEmails.includes(playerEmail))
-        .filter((team) => !data.joinRequests.some(
-          (request) => request.teamId === team.id
-            && request.playerEmail === playerEmail
-            && request.status === 'pending',
+        .filter((team) => !data.teams.some(
+          (existingTeam) => existingTeam.tournamentId === tournament.id
+            && existingTeam.memberEmails.includes(playerEmail),
         ))
+        .filter((team) => !data.joinRequests.some((request) => {
+          if (request.playerEmail !== playerEmail || request.status !== 'pending') {
+            return false;
+          }
+          return data.teams.find((existingTeam) => existingTeam.id === request.teamId)?.tournamentId
+            === tournament.id;
+        }))
         .map((team) => ({ team, tournament })),
     );
   }
@@ -273,15 +294,16 @@ export class TournamentService {
       || !tournament
       || tournament.status !== 'open'
       || team.memberEmails.length >= team.capacity
-      || team.memberEmails.includes(playerEmail)
-      || data.joinRequests.some(
-        (request) => request.teamId === teamId
-          && request.playerEmail === playerEmail
-          && request.status !== 'rejected',
-      )
       || data.teams.some(
         (item) => item.tournamentId === team.tournamentId && item.memberEmails.includes(playerEmail),
       )
+      || data.joinRequests.some((request) => {
+        if (request.playerEmail !== playerEmail || request.status !== 'pending') {
+          return false;
+        }
+        return data.teams.find((existingTeam) => existingTeam.id === request.teamId)?.tournamentId
+          === team.tournamentId;
+      })
     ) {
       return null;
     }
@@ -326,11 +348,15 @@ export class TournamentService {
       ? data.teams.find((item) => item.id === request.teamId && item.ownerEmail === ownerEmail)
       : null;
     const tournament = team ? this.getOwnedTournament(team.tournamentId, ownerEmail) : null;
-    if (!ownerEmail || !request || !team || !tournament || tournament.status !== 'open') {
+    if (!ownerEmail || !request || !team || !tournament) {
       return false;
     }
 
     if (approved) {
+      if (tournament.status !== 'open') {
+        return false;
+      }
+
       const alreadyInTournament = data.teams.some(
         (item) => item.tournamentId === team.tournamentId && item.memberEmails.includes(request.playerEmail),
       );
@@ -384,7 +410,8 @@ export class TournamentService {
     const ownerEmail = this.getOrganizerEmail();
     const data = this.getCompetitionData();
     const match = data.matches.find((item) => item.id === matchId && item.ownerEmail === ownerEmail);
-    if (!ownerEmail || !match || !this.getOwnedTournament(match.tournamentId, ownerEmail)) {
+    const tournament = match ? this.getOwnedTournament(match.tournamentId, ownerEmail) : null;
+    if (!ownerEmail || !match || !tournament || tournament.status === 'completed') {
       return false;
     }
 
@@ -560,17 +587,21 @@ export class TournamentService {
 
   private getAllTournaments(): Tournament[] {
     const savedTournaments = localStorage.getItem(this.tournamentsKey);
-    const tournaments = savedTournaments
-      ? JSON.parse(savedTournaments) as Array<Partial<Tournament> & { date?: string }>
-      : [];
-    return tournaments.map((tournament): Tournament => ({
-      ...tournament,
+    const tournaments = savedTournaments ? JSON.parse(savedTournaments) as SavedTournament[] : [];
+    return tournaments.map((tournament) => ({
+      id: tournament.id,
+      ownerEmail: tournament.ownerEmail,
+      name: tournament.name,
+      sport: tournament.sport,
       startDate: tournament.startDate ?? tournament.date ?? '',
       endDate: tournament.endDate ?? tournament.date ?? '',
+      location: tournament.location ?? '',
+      description: tournament.description ?? '',
+      rules: tournament.rules ?? '',
       format: tournament.format ?? 'elimination',
       status: tournament.status ?? 'open',
       maxTeams: tournament.maxTeams ?? 16,
-    } as Tournament));
+    }));
   }
 
   private saveTournaments(tournaments: Tournament[]): void {
@@ -630,7 +661,7 @@ export class TournamentService {
       return false;
     }
     return !data.matches.some((match) => {
-      if (match.id === exceptMatchId || match.tournamentId !== tournamentId) {
+      if (match.id === exceptMatchId || match.ownerEmail !== this.getOrganizerEmail()) {
         return false;
       }
 

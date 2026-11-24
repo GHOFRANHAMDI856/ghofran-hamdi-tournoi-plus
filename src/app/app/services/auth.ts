@@ -122,13 +122,7 @@ export class Auth {
       name: user.name,
       email: user.email,
       password: user.password,
-      role: user.role === 'admin'
-        ? 'organisateur'
-        : user.role === 'equipe'
-          ? 'joueur'
-        : this.isUserRole(user.role)
-          ? user.role
-          : 'spectateur',
+      role: this.migrateRole(user.role),
     }));
     const needsMigration = activeUsers.length !== savedUsers.length
       || activeUsers.some((user, index) => activeSavedUsers[index]?.role !== user.role);
@@ -144,10 +138,18 @@ export class Auth {
     return typeof role === 'string' && ACCOUNT_ROLES.some((knownRole) => knownRole === role);
   }
 
+  private migrateRole(role: unknown): UserRole {
+    if (role === 'admin') {
+      return 'organisateur';
+    }
+    if (role === 'equipe') {
+      return 'joueur';
+    }
+    return this.isUserRole(role) ? role : 'spectateur';
+  }
+
   private isPublicUserRole(role: unknown): role is PublicUserRole {
-    return role === 'organisateur'
-      || role === 'joueur'
-      || role === 'spectateur';
+    return this.isUserRole(role);
   }
 
   private isRemovedDemoEmail(email: string): boolean {
