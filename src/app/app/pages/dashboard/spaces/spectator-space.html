@@ -1,0 +1,90 @@
+<div class="role-space spectator-space">
+<section class="summary-grid role-summary" aria-label="Résumé spectateur">
+  <article class="summary-card">
+    <span class="summary-value">{{ tournaments().length }}</span>
+    <span class="summary-label">Tournois publics</span>
+    <span class="summary-hint">Compétitions disponibles à suivre</span>
+  </article>
+  <article class="summary-card">
+    <span class="summary-value">{{ liveMatches() }}</span>
+    <span class="summary-label">Matchs en cours</span>
+    <span class="summary-hint">Suivez le déroulement en direct</span>
+  </article>
+  <article class="summary-card">
+    <span class="summary-value">{{ followedTournamentIds().length }}</span>
+    <span class="summary-label">Tournois suivis</span>
+    <span class="summary-hint">Votre sélection personnelle</span>
+  </article>
+</section>
+
+<div class="space-refresh-row">
+  <button class="secondary-action" type="button" (click)="refreshSpace()">Actualiser les scores</button>
+</div>
+
+<section class="role-section" aria-labelledby="spectator-tournaments-title">
+  <div class="tournament-heading">
+    <div>
+      <p class="dashboard-eyebrow">ESPACE SPECTATEUR</p>
+      <h2 id="spectator-tournaments-title">Tournois à suivre</h2>
+      <p>Choisissez vos compétitions pour retrouver rapidement leurs matchs et leurs scores.</p>
+    </div>
+  </div>
+  @if (tournaments().length) {
+    <div class="team-grid">
+      @for (tournament of tournaments(); track tournament.id) {
+        <article class="team-card spectator-tournament-card">
+          <span class="sport-tag">{{ tournament.sport }} · {{ formatStatus(tournament.status) }}</span>
+          <h3>{{ tournament.name }}</h3>
+          <p>{{ formatDate(tournament.startDate) }} – {{ formatDate(tournament.endDate) }} · {{ tournament.location }}</p>
+          <button
+            class="secondary-action"
+            [class.following-action]="isFollowing(tournament.id)"
+            type="button"
+            (click)="toggleFollow(tournament)"
+          >
+            {{ isFollowing(tournament.id) ? 'Ne plus suivre' : 'Suivre ce tournoi' }}
+          </button>
+        </article>
+      }
+    </div>
+  } @else {
+    <p class="small-empty">Aucun tournoi publié pour le moment.</p>
+  }
+</section>
+
+<section class="role-section" aria-labelledby="spectator-matches-title">
+  <div class="tournament-heading">
+    <div>
+      <p class="dashboard-eyebrow">SUIVI DES SCORES</p>
+      <h2 id="spectator-matches-title">Matchs de mes tournois</h2>
+      <p>Les résultats sont mis à jour par les organisateurs.</p>
+    </div>
+  </div>
+  @if (followedMatches().length) {
+    <div class="match-list">
+      @for (tournamentId of followedTournamentIds(); track tournamentId) {
+        @if (getMatchesForTournament(tournamentId).length) {
+          <div class="followed-tournament">
+            <h3>{{ getTournamentName(getMatchesForTournament(tournamentId)[0]) }}</h3>
+            @for (match of getMatchesForTournament(tournamentId); track match.id) {
+              <article class="match-card spectator-match">
+                <div class="match-heading">
+                  <span class="match-status">{{ getMatchStatus(match) }}</span>
+                  <span>{{ formatDateTime(match.startAt) }} · {{ match.location }}</span>
+                </div>
+                <div class="player-match-result">
+                  <span>{{ getTeamName(match.homeTeamId) }}</span>
+                  <strong>{{ getScore(match) }}</strong>
+                  <span>{{ getTeamName(match.awayTeamId) }}</span>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      }
+    </div>
+  } @else {
+    <p class="small-empty">Suivez un tournoi ci-dessus pour afficher son calendrier et ses scores ici.</p>
+  }
+</section>
+</div>

@@ -1,1 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
+@import "./app/app/pages/dashboard/dashboard.css";
+
+.role-select { min-height: 40px; padding: 0 11px; border: 1px solid #dde3ec; border-radius: 9px; background: #fbfcfe; color: #354153; font: inherit; font-size: 12px; }
+.role-select:focus { border-color: #7c3aed; outline: 0; box-shadow: 0 0 0 3px #7c3aed1a; }
+.registration-role { width: 100%; height: 50px; }
+.session-dashboard-link { display: flex; align-items: center; justify-content: center; text-decoration: none; }

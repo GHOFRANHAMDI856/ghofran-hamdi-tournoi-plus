@@ -1,0 +1,270 @@
+<div class="role-space organizer-space">
+<section class="summary-grid organizer-summary" aria-label="Vue d'ensemble organisateur">
+  <article class="summary-card">
+    <span class="summary-value">{{ activeTournaments() }}</span>
+    <span class="summary-label">Tournois actifs</span>
+    <span class="summary-hint">{{ upcomingTournaments() }} brouillon(s), {{ completedTournaments() }} terminé(s)</span>
+  </article>
+  <article class="summary-card">
+    <span class="summary-value">{{ pendingRegistrations() }}</span>
+    <span class="summary-label">Inscriptions à valider</span>
+    <span class="summary-hint">Demandes de joueurs en attente</span>
+  </article>
+  <article class="summary-card">
+    <span class="summary-value">{{ matchesToday() }}</span>
+    <span class="summary-label">Matchs aujourd'hui</span>
+    <span class="summary-hint">Tous vos tournois</span>
+  </article>
+  <article class="summary-card">
+    <span class="summary-value">{{ matchesWithoutScore() }}</span>
+    <span class="summary-label">Scores à saisir</span>
+    <span class="summary-hint">Matchs sans résultat complet</span>
+  </article>
+</section>
+
+<section class="tournament-section" aria-labelledby="organizer-tournaments-title">
+  <div class="tournament-heading">
+    <div>
+      <p class="dashboard-eyebrow">GESTION ORGANISATEUR</p>
+      <h2 id="organizer-tournaments-title">Mes tournois</h2>
+      <p>Gérez vos compétitions, équipes, inscriptions, matchs et résultats.</p>
+    </div>
+    <button class="primary-action" type="button" (click)="openCreateTournament()">+ Créer un tournoi</button>
+  </div>
+
+  @if (message()) {
+    <p class="tournament-message" role="status">{{ message() }}</p>
+  }
+  @if (error()) {
+    <p class="tournament-error" role="alert">{{ error() }}</p>
+  }
+
+  @if (showTournamentForm()) {
+    <form class="tournament-form" [formGroup]="tournamentForm" (ngSubmit)="saveTournament()" novalidate>
+      <div class="form-heading">
+        <h3>{{ editingTournamentId() ? 'Modifier le tournoi' : 'Créer un tournoi' }}</h3>
+        <p>Les champs marqués d’un astérisque sont obligatoires.</p>
+      </div>
+      <div class="tournament-fields">
+        <div class="tournament-field">
+          <label for="tournament-name">Nom du tournoi *</label>
+          <input id="tournament-name" type="text" formControlName="name" maxlength="80" />
+          @if (tournamentForm.controls.name.touched && tournamentForm.controls.name.invalid) {
+            <small class="input-error">Saisissez un nom valide.</small>
+          }
+        </div>
+        <div class="tournament-field">
+          <label for="tournament-sport">Sport / jeu *</label>
+          <input id="tournament-sport" type="text" formControlName="sport" maxlength="50" placeholder="Ex. football" />
+          @if (tournamentForm.controls.sport.touched && tournamentForm.controls.sport.invalid) {
+            <small class="input-error">Saisissez un sport ou un jeu.</small>
+          }
+        </div>
+        <div class="tournament-field">
+          <label for="tournament-start-date">Date de début *</label>
+          <input id="tournament-start-date" type="date" formControlName="startDate" />
+        </div>
+        <div class="tournament-field">
+          <label for="tournament-end-date">Date de fin *</label>
+          <input id="tournament-end-date" type="date" formControlName="endDate" />
+        </div>
+        <div class="tournament-field">
+          <label for="tournament-location">Lieu *</label>
+          <input id="tournament-location" type="text" formControlName="location" maxlength="100" />
+        </div>
+        <div class="tournament-field">
+          <label for="tournament-format">Format</label>
+          <select id="tournament-format" formControlName="format">
+            <option value="elimination">Élimination directe</option>
+            <option value="league">Championnat</option>
+            <option value="groups">Phases de groupes</option>
+          </select>
+        </div>
+        <div class="tournament-field">
+          <label for="tournament-status">Statut</label>
+          <select id="tournament-status" formControlName="status">
+            <option value="draft">Brouillon</option>
+            <option value="open">Inscriptions ouvertes</option>
+            <option value="in_progress">En cours</option>
+            <option value="completed">Terminé</option>
+          </select>
+        </div>
+        <div class="tournament-field">
+          <label for="tournament-max-teams">Nombre maximum d’équipes</label>
+          <input id="tournament-max-teams" type="number" min="2" max="100" formControlName="maxTeams" />
+        </div>
+        <div class="tournament-field wide-field">
+          <label for="tournament-description">Description</label>
+          <textarea id="tournament-description" formControlName="description" rows="3" maxlength="1000"></textarea>
+        </div>
+        <div class="tournament-field wide-field">
+          <label for="tournament-rules">Règlement</label>
+          <textarea id="tournament-rules" formControlName="rules" rows="4" maxlength="2000"></textarea>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="secondary-action" type="button" (click)="closeTournamentForm()">Annuler</button>
+        <button class="primary-action" type="submit">{{ editingTournamentId() ? 'Enregistrer' : 'Créer le tournoi' }}</button>
+      </div>
+    </form>
+  }
+
+  @if (tournaments().length === 0) {
+    <div class="tournament-placeholder">
+      <strong>Votre espace organisateur est prêt.</strong>
+      <span>Créez un tournoi pour ouvrir les inscriptions, gérer les équipes et planifier les matchs.</span>
+    </div>
+  } @else {
+    <div class="tournament-list">
+      @for (tournament of tournaments(); track tournament.id) {
+        <article class="tournament-card">
+          <div class="tournament-card-heading">
+            <div>
+              <span class="sport-tag">{{ tournament.sport }} · {{ formatFormat(tournament.format) }}</span>
+              <h3>{{ tournament.name }}</h3>
+              <span class="tournament-status">{{ formatStatus(tournament.status) }}</span>
+            </div>
+            <div class="tournament-card-actions">
+              <button class="secondary-action" type="button" (click)="editTournament(tournament)">Modifier</button>
+              <button class="delete-action" type="button" (click)="deleteTournament(tournament.id)">Supprimer</button>
+            </div>
+          </div>
+          <div class="tournament-meta">
+            <span><strong>Dates</strong>{{ formatDate(tournament.startDate) }} – {{ formatDate(tournament.endDate) }}</span>
+            <span><strong>Lieu</strong>{{ tournament.location }}</span>
+            <span><strong>Capacité</strong>{{ getTeams(tournament.id).length }} / {{ tournament.maxTeams }} équipes</span>
+          </div>
+          @if (tournament.description) {
+            <p class="tournament-description">{{ tournament.description }}</p>
+          }
+          @if (tournament.rules) {
+            <details class="tournament-rules">
+              <summary>Consulter le règlement</summary>
+              <p>{{ tournament.rules }}</p>
+            </details>
+          }
+
+          <details class="management-details">
+            <summary>Gérer les équipes et les matchs</summary>
+            <div class="management-grid">
+              <section class="management-panel" aria-label="Gestion des équipes">
+                <div class="subsection-heading">
+                  <div><h4>Équipes</h4><p>Créez les équipes et validez les demandes des joueurs.</p></div>
+                  <button class="secondary-action" type="button" (click)="openTeamForm(tournament.id)">+ Équipe</button>
+                </div>
+                @if (showTeamFormFor() === tournament.id) {
+                  <form class="inline-form" [formGroup]="teamForm" (ngSubmit)="createTeam(tournament.id)">
+                    <label>Nom de l’équipe <input type="text" formControlName="name" maxlength="60" /></label>
+                    <label>Effectif maximum <input type="number" min="2" max="100" formControlName="capacity" /></label>
+                    <button class="primary-action" type="submit">Ajouter</button>
+                  </form>
+                }
+                @if (getTeams(tournament.id).length) {
+                  <div class="compact-list">
+                    @for (team of getTeams(tournament.id); track team.id) {
+                      <div class="compact-row">
+                        <span><strong>{{ team.name }}</strong><small>{{ team.memberEmails.length }} / {{ team.capacity }} joueurs</small></span>
+                        <button class="delete-action" type="button" (click)="deleteTeam(team)">Supprimer</button>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <p class="small-empty">Aucune équipe pour le moment.</p>
+                }
+
+                <h5>Demandes d’inscription</h5>
+                @if (getJoinRequests(tournament.id).length) {
+                  <div class="compact-list">
+                    @for (request of getJoinRequests(tournament.id); track request.id) {
+                      <div class="compact-row">
+                        <span><strong>{{ request.playerEmail }}</strong><small class="request-status">{{ request.status === 'pending' ? 'En attente' : request.status === 'approved' ? 'Acceptée' : 'Refusée' }}</small></span>
+                        @if (request.status === 'pending') {
+                          <span class="compact-actions">
+                            <button class="secondary-action" type="button" (click)="reviewRegistration(request, true)">Accepter</button>
+                            <button class="delete-action" type="button" (click)="reviewRegistration(request, false)">Refuser</button>
+                          </span>
+                        }
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <p class="small-empty">Aucune demande d’inscription.</p>
+                }
+              </section>
+              </div>
+              </div>
+
+              <section class="management-panel" aria-label="Gestion des matchs">
+                <div class="subsection-heading">
+                  <div><h4>Calendrier et résultats</h4><p>Planifiez les matchs, terrains et scores.</p></div>
+                  <button class="secondary-action" type="button" [disabled]="getTeams(tournament.id).length < 2" (click)="openMatchForm(tournament.id)">+ Match</button>
+                </div>
+                @if (showMatchFormFor() === tournament.id) {
+                  <form class="inline-form match-form" [formGroup]="matchForm" (ngSubmit)="saveMatch(tournament.id)">
+                    <label>Équipe 1
+                      <select formControlName="homeTeamId">
+                        <option value="">Choisir</option>
+                        @for (team of getTeams(tournament.id); track team.id) { <option [value]="team.id">{{ team.name }}</option> }
+                      </select>
+                    </label>
+                    <label>Équipe 2
+                      <select formControlName="awayTeamId">
+                        <option value="">Choisir</option>
+                        @for (team of getTeams(tournament.id); track team.id) { <option [value]="team.id">{{ team.name }}</option> }
+                      </select>
+                    </label>
+                    <label>Début <input type="datetime-local" formControlName="startAt" /></label>
+                    <label>Fin <input type="datetime-local" formControlName="endAt" /></label>
+                    <label class="wide-field">Lieu / terrain <input type="text" formControlName="location" maxlength="100" /></label>
+                    <button class="primary-action" type="submit">{{ editingMatchId() ? 'Enregistrer' : 'Planifier' }}</button>
+                  </form>
+                }
+
+                @if (getMatches(tournament.id).length) {
+                  <div class="match-list">
+                    @for (match of getMatches(tournament.id); track match.id) {
+                      <article class="match-card">
+                        <div class="match-heading">
+                          <span class="match-status">{{ getMatchStatus(match) }}</span>
+                          <span>{{ formatDateTime(match.startAt) }} · {{ match.location }}</span>
+                          <span class="match-actions">
+                            <button class="text-action" type="button" (click)="editMatch(match)">Modifier</button>
+                            <button class="text-action danger-text" type="button" (click)="deleteMatch(match)">Supprimer</button>
+                          </span>
+                        </div>
+                        <div class="score-row">
+                          <label>{{ getTeamName(match.homeTeamId) }}
+                            <input type="number" min="0" step="1" [value]="match.homeScore ?? ''" [attr.aria-label]="'Score de ' + getTeamName(match.homeTeamId)" (change)="updateScore(match, 'home', $event)" />
+                          </label>
+                          <span>—</span>
+                          <label>{{ getTeamName(match.awayTeamId) }}
+                            <input type="number" min="0" step="1" [value]="match.awayScore ?? ''" [attr.aria-label]="'Score de ' + getTeamName(match.awayTeamId)" (change)="updateScore(match, 'away', $event)" />
+                          </label>
+                        </div>
+                        @if (getPlayersForMatch(match).length) {
+                          <details class="player-points-details">
+                            <summary>Points individuels des joueurs</summary>
+                            <div class="player-points-list">
+                              @for (playerEmail of getPlayersForMatch(match); track playerEmail) {
+                                <label>{{ playerEmail }}
+                                  <input type="number" min="0" step="1" [value]="getPlayerPoints(match, playerEmail) ?? ''" (change)="updatePlayerPoints(match, playerEmail, $event)" />
+                                </label>
+                              }
+                            </div>
+                          </details>
+                        }
+                      </article>
+                    }
+                  </div>
+                } @else {
+                  <p class="small-empty">Aucun match planifié.</p>
+                }
+              </section>
+            </div>
+          </details>
+        </article>
+      }
+    </div>
+  }
+</section>
+</div>

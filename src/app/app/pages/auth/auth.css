@@ -229,6 +229,10 @@
 
 .auth-heading { margin-bottom: 22px; }
 .auth-heading p { margin: 7px 0 0; color: #7b8797; }
+.auth-heading.login-heading,
+.auth-form.login-form { animation: authSlideFromLeft 360ms cubic-bezier(.2,.8,.2,1) both; }
+.auth-heading.register-heading,
+.auth-form.register-form { animation: authSlideFromRight 360ms cubic-bezier(.2,.8,.2,1) both; }
 .eyebrow {
   color: #7c3aed !important;
   font-size: 11px;
@@ -417,6 +421,16 @@ input:focus {
   }
 }
 
+@keyframes authSlideFromLeft {
+  from { opacity: 0; transform: translateX(-22px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes authSlideFromRight {
+  from { opacity: 0; transform: translateX(22px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 @media (max-width: 760px) {
   .auth-page { padding: 14px; align-items: start; }
   .auth-page::before {
@@ -455,7 +469,13 @@ input:focus {
   .auth-card,
   .background-video,
   .sports-panel,
-  .auth-content {
+  .auth-content,
+  .auth-heading.login-heading,
+  .auth-heading.register-heading,
+  .auth-form.login-form,
+  .auth-form.register-form {
     animation: none;
   }
+
+  .auth-tabs button { transition: none; }
 }
