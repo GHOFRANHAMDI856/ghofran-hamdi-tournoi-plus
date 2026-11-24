@@ -1,59 +1,253 @@
-# GestionTournoi
+# Tournoi Plus
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.24.
+Application web de gestion sportive développée avec Angular. Elle permet de créer des tournois, gérer les équipes et les matchs, attribuer des points aux joueurs, suivre les compétitions et proposer une interface adaptée à chaque rôle utilisateur.
 
-## Development server
+## Fonctionnalités
 
-To start a local development server, run:
+### Compte utilisateur
 
-```bash
-ng serve
+- Inscription avec nom, adresse e-mail, mot de passe et rôle.
+- Connexion et déconnexion.
+- Quatre rôles disponibles : organisateur, joueur, arbitre et spectateur.
+- Protection de la route `/gestion` pour les utilisateurs non connectés.
+
+### Espace organisateur
+
+- Création, modification et suppression de tournois.
+- Configuration du sport, des dates, du lieu, des règles, du format, du statut et du nombre d'équipes.
+- Création et gestion des équipes.
+- Gestion des demandes d'inscription des joueurs.
+- Création, modification et suppression des matchs.
+- Affectation d'un arbitre à un match.
+- Tableau de bord avec statistiques sur les tournois, les équipes, les matchs et les inscriptions.
+- Saisie des scores et des points des joueurs.
+
+Formats de tournoi pris en charge :
+
+- Élimination directe
+- Championnat
+- Phase de groupes
+
+Sports proposés :
+
+- Basketball
+- Football
+- Volleyball
+- Handball
+
+### Espace joueur
+
+- Consultation des équipes disponibles.
+- Envoi de demandes d'inscription.
+- Suivi du statut des demandes : en attente, approuvée ou refusée.
+- Consultation des équipes rejointes.
+- Consultation des matchs associés.
+- Suivi des points personnels.
+
+### Espace arbitre
+
+- Consultation des matchs qui lui sont affectés.
+- Affichage du calendrier, des équipes, du lieu et du statut des rencontres.
+- Consultation des scores enregistrés.
+
+### Espace spectateur
+
+- Recherche et filtrage des tournois.
+- Filtres par nom, ville, date et sport.
+- Suivi ou arrêt du suivi d'un tournoi.
+- Consultation des tournois suivis et des matchs en direct.
+
+## Architecture
+
+```text
+src/
+  app/
+    app/
+      auth.guard.ts
+      pages/
+        auth/
+        dashboard/
+          spaces/
+      services/
+        auth.ts
+        tournament.ts
+  main.ts
+  styles.css
+backend/
+  src/
+    app.js
+    database.js
+    routes/
+  test/
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Composants principaux :
 
-## Code scaffolding
+- `Auth` : connexion et inscription.
+- `Dashboard` : navigation selon le rôle connecté.
+- `OrganizerSpace` : gestion des tournois et des compétitions.
+- `PlayerSpace` : inscriptions aux équipes et suivi des matchs.
+- `RefereeSpace` : consultation des rencontres affectées.
+- `SpectatorSpace` : découverte et suivi des tournois.
+- `Auth` service : gestion des comptes et de la session.
+- `TournamentService` : gestion des tournois, équipes, demandes, matchs, scores, points et suivis.
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Stockage des données
+
+L’application Angular conserve encore ses données dans le navigateur avec `localStorage`. Le backend ajouté est une API autonome qui persiste ses propres données dans SQLite ; il n’est pas encore connecté aux services Angular.
+
+| Clé | Contenu |
+| --- | --- |
+| `gestion-tournoi-users` | Comptes enregistrés |
+| `gestion-tournoi-session` | Session utilisateur active |
+| `gestion-tournoi-tournaments` | Tournois |
+| `gestion-tournoi-competition` | Équipes, demandes, matchs, scores, points et suivis |
+
+Les données `localStorage` ne sont pas synchronisées avec l’API ni entre plusieurs appareils. Les données créées via l’API sont stockées dans `backend/data/tournoi-plus.sqlite`.
+
+## Technologies utilisées
+
+- Angular 21
+- TypeScript 5.9
+- Angular Reactive Forms
+- Angular Router
+- RxJS
+- Angular Signals
+- Vitest
+- jsdom
+- CSS
+- Node.js, Express et SQLite (API)
+- bcryptjs et JWT (authentification de l’API)
+
+## Compétences mises en œuvre
+
+- Création d'une application Angular avec composants autonomes.
+- Structuration d'une application par fonctionnalités et services.
+- Mise en place d'un guard d'authentification.
+- Gestion des formulaires réactifs et de leurs validations.
+- Gestion des rôles et affichage dynamique des espaces.
+- Modélisation de données pour les tournois, équipes, matchs et utilisateurs.
+- Gestion d'état locale avec Angular Signals.
+- Persistance des données dans `localStorage`.
+- Détection des changements entre onglets via les événements de stockage.
+- Tests unitaires des services, composants et espaces utilisateur.
+- Construction d'une interface responsive avec plusieurs thèmes visuels.
+
+## Utilisation des compétences Copilot
+
+Pour ce README et les développements associés, aucune compétence spécialisée externe n'a été chargée. Le travail a été réalisé directement avec les outils du projet, l'analyse des composants Angular, des services, des routes, des tests et de la configuration `package.json`.
+
+Les outils et notions utilisés sont principalement :
+
+- Angular CLI
+- TypeScript
+- Reactive Forms
+- Angular Router
+- Angular Signals
+- Tests Vitest
+- Analyse et rédaction technique
+
+## Prérequis
+
+- Node.js 20 ou plus récent
+- npm
+- Angular CLI
+
+## Installation
 
 ```bash
-ng generate component component-name
+npm install
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Démarrage
 
 ```bash
-ng generate --help
+npm start
 ```
 
-## Building
+Puis ouvrir `http://localhost:4200/`.
 
-To build the project run:
+La route principale de connexion est `/login`. Après authentification, l'application redirige vers `/gestion`.
+
+## Backend API
+
+L’API REST est indépendante du frontend pour le moment. Elle fournit l’authentification, les rôles, la gestion des tournois, des équipes, des demandes d’inscription, des matchs, des scores, des points et des suivis de tournois.
+
+### Installation et démarrage
+
+Dans un second terminal :
+
+```powershell
+Set-Location backend
+npm install
+Copy-Item .env.example .env
+```
+
+Modifier `JWT_SECRET` dans `.env` avec une valeur aléatoire d’au moins 32 caractères, puis lancer :
+
+```powershell
+npm start
+```
+
+L’API écoute par défaut sur `http://localhost:3000`. `DATABASE_PATH`, `PORT`, `JWT_EXPIRES_IN` et `CORS_ORIGIN` sont configurables dans `backend/.env`. Le fichier SQLite est créé automatiquement. Pour exécuter les tests backend : `npm test` depuis le dossier `backend`.
+
+### Endpoints principaux
+
+| Méthode | Endpoint | Accès |
+| --- | --- | --- |
+| `POST` | `/api/auth/register`, `/api/auth/login` | Public, limité en fréquence |
+| `GET` | `/api/auth/me`, `/api/auth/referees` | Connecté / organisateur |
+| `GET`, `POST` | `/api/tournaments` | Public / organisateur |
+| `GET` | `/api/tournaments/mine` | Organisateur |
+| `PUT`, `DELETE` | `/api/tournaments/:id` | Propriétaire organisateur |
+| `GET`, `POST` | `/api/tournaments/:id/teams` | Propriétaire organisateur |
+| `GET`, `POST` | `/api/teams/directory`, `/api/teams/:id/join-requests` | Joueur |
+| `GET`, `PATCH` | `/api/tournaments/:id/join-requests`, `/api/join-requests/:id` | Organisateur |
+| `GET`, `POST` | `/api/tournaments/:id/matches` | Organisateur |
+| `GET`, `PUT`, `PATCH`, `DELETE` | `/api/matches/:id` et sous-routes | Selon rôle |
+| `GET`, `PUT` | `/api/follows`, `/api/tournaments/:id/follow` | Spectateur |
+
+Les routes protégées utilisent `Authorization: Bearer <token>`. Les mots de passe sont hachés avec bcrypt ; les jetons JWT expirent après un jour par défaut. La politique CORS autorise `http://localhost:4200` par défaut.
+
+## Construction
 
 ```bash
-ng build
+npm run build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Les fichiers de production sont générés dans le dossier `dist/`.
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## Tests
 
 ```bash
-ng test
+npm test
 ```
 
-## Running end-to-end tests
+Les tests unitaires disponibles couvrent notamment :
 
-For end-to-end (e2e) testing, run:
+- Application principale
+- Authentification
+- Guard de connexion
+- Tableau de bord
+- Service des tournois
+- Espace organisateur
+- Espace arbitre
+- Espace spectateur
 
-```bash
-ng e2e
-```
+## Routes
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+| Route | Composant | Accès |
+| --- | --- | --- |
+| `/` | Redirection vers `/login` | Public |
+| `/login` | Authentification | Public |
+| `/gestion` | Tableau de bord selon le rôle | Utilisateur connecté |
+| Toute autre route | Redirection vers `/login` | Public |
 
-## Additional Resources
+## Améliorations possibles
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- Connecter les services Angular à l’API backend.
+- Ajouter les notifications et mises à jour en temps réel.
+- Mettre en place des rôles administratifs plus fins.
+- Ajouter un tableau de classement automatique.
+- Exporter les résultats et calendriers.
+- Déployer l'application sur une plateforme d'hébergement.

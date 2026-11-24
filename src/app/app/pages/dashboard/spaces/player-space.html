@@ -1,0 +1,124 @@
+<div class="role-space player-space">
+<section class="summary-grid role-summary" aria-label="Résumé joueur">
+  <article class="summary-card">
+    <span class="summary-value">{{ teams().length }}</span>
+    <span class="summary-label">Équipe(s)</span>
+    <span class="summary-hint">Équipes que vous avez rejointes</span>
+  </article>
+  <article class="summary-card">
+    <span class="summary-value">{{ matches().length }}</span>
+    <span class="summary-label">Matchs</span>
+    <span class="summary-hint">Calendrier et résultats de vos équipes</span>
+  </article>
+  <article class="summary-card">
+    <span class="summary-value">{{ pointsTotal() }}</span>
+    <span class="summary-label">Points marqués</span>
+    <span class="summary-hint">Total enregistré par l’organisateur</span>
+  </article>
+</section>
+
+<div class="space-refresh-row">
+  <button class="secondary-action" type="button" (click)="refreshSpace()">Actualiser mon espace</button>
+</div>
+
+@if (message()) {
+  <p class="tournament-message" role="status">{{ message() }}</p>
+}
+@if (error()) {
+  <p class="tournament-error" role="alert">{{ error() }}</p>
+}
+
+<section class="role-section" aria-labelledby="player-teams-title">
+  <div class="tournament-heading">
+    <div>
+      <p class="dashboard-eyebrow">ESPACE JOUEUR</p>
+      <h2 id="player-teams-title">Mes équipes</h2>
+      <p>Rejoignez une équipe et suivez vos demandes d’inscription.</p>
+    </div>
+  </div>
+
+  @if (teams().length) {
+    <div class="team-grid">
+      @for (team of teams(); track team.id) {
+        <article class="team-card">
+          <span class="sport-tag">{{ team.memberEmails.length }} / {{ team.capacity }} joueurs</span>
+          <h3>{{ team.name }}</h3>
+          <p>{{ team.memberEmails.length }} membre(s) dans cette équipe.</p>
+        </article>
+      }
+    </div>
+  } @else {
+    <p class="small-empty">Vous n’avez pas encore rejoint d’équipe.</p>
+  }
+
+  @if (requests().length) {
+    <h3 class="subsection-title">Mes demandes</h3>
+    <div class="compact-list">
+      @for (request of requests(); track request.id) {
+        <div class="compact-row">
+          <span><strong>{{ getTeamName(request.teamId) }}</strong><small>Demande envoyée</small></span>
+          <span class="request-status" [class]="request.status">{{ request.status === 'pending' ? 'En attente' : request.status === 'approved' ? 'Acceptée' : 'Refusée' }}</span>
+        </div>
+      }
+    </div>
+  }
+</section>
+
+<section class="role-section" aria-labelledby="join-team-title">
+  <div class="tournament-heading">
+    <div>
+      <p class="dashboard-eyebrow">INSCRIPTIONS OUVERTES</p>
+      <h2 id="join-team-title">Rejoindre une équipe</h2>
+      <p>Les demandes sont envoyées à l’organisateur pour validation.</p>
+    </div>
+  </div>
+  @if (directory().length) {
+    <div class="team-grid">
+      @for (entry of directory(); track entry.team.id) {
+        <article class="team-card">
+          <span class="sport-tag">{{ entry.tournament.sport }} · {{ entry.team.memberEmails.length }} / {{ entry.team.capacity }} joueurs</span>
+          <h3>{{ entry.team.name }}</h3>
+          <p>{{ entry.tournament.name }}</p>
+          @if (getRequestForTeam(entry.team.id)?.status === 'pending') {
+            <span class="request-status pending">Demande en attente</span>
+          } @else {
+            <button class="primary-action" type="button" (click)="requestToJoin(entry.team)">Demander à rejoindre</button>
+          }
+        </article>
+      }
+    </div>
+  } @else {
+    <p class="small-empty">Aucune équipe ouverte avec des places disponibles pour le moment.</p>
+  }
+</section>
+
+<section class="role-section" aria-labelledby="player-matches-title">
+  <div class="tournament-heading">
+    <div>
+      <p class="dashboard-eyebrow">CALENDRIER PERSONNEL</p>
+      <h2 id="player-matches-title">Mes matchs et mes points</h2>
+      <p>Consultez les horaires, scores et points individuels saisis par l’organisateur.</p>
+    </div>
+  </div>
+  @if (matches().length) {
+    <div class="match-list">
+      @for (match of matches(); track match.id) {
+        <article class="match-card">
+          <div class="match-heading">
+            <span class="match-status">{{ getMatchStatus(match) }}</span>
+            <span>{{ getTournamentName(match) }} · {{ formatDateTime(match.startAt) }}</span>
+          </div>
+          <div class="player-match-result">
+            <span>{{ getTeamName(match.homeTeamId) }}</span>
+            <strong>{{ getMatchScore(match) }}</strong>
+            <span>{{ getTeamName(match.awayTeamId) }}</span>
+          </div>
+          <p class="personal-points">Points personnels : <strong>{{ getPersonalPoints(match) ?? '—' }}</strong></p>
+        </article>
+      }
+    </div>
+  } @else {
+    <p class="small-empty">Vos matchs apparaîtront ici après votre inscription dans une équipe.</p>
+  }
+</section>
+</div>

@@ -1,12 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
-import { Auth as AuthService } from '../../services/auth';
+import { Auth as AuthService, AuthUser, PublicUserRole, UserRole } from '../../services/auth';
 
 @Component({
   selector: 'app-auth',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './auth.html',
   styleUrl: './auth.css',
 })
@@ -24,8 +24,15 @@ export class Auth {
     name: ['', [Validators.required, Validators.minLength(2)]],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
+    role: this.formBuilder.nonNullable.control<PublicUserRole>('spectateur'),
   });
 
+  readonly signupRoles: Array<{ value: PublicUserRole; label: string }> = [
+    { value: 'organisateur', label: 'Organisateur' },
+    { value: 'joueur', label: 'Joueur' },
+    { value: 'spectateur', label: 'Spectateur' },
+    { value: 'arbitre', label: 'Arbitre' },
+  ];
   errorMessage = '';
   successMessage = '';
   mode: 'login' | 'register' = 'login';
@@ -35,8 +42,19 @@ export class Auth {
     return this.auth.isAuthenticated();
   }
 
-  get currentUser(): { email: string; name: string } | null {
+  get currentUser(): AuthUser | null {
     return this.auth.getCurrentUser();
+  }
+
+  roleLabel(role: UserRole): string {
+    const labels: Record<UserRole, string> = {
+      organisateur: 'Organisateur',
+      joueur: 'Joueur',
+      spectateur: 'Spectateur',
+      arbitre: 'Arbitre',
+    };
+
+    return labels[role];
   }
 
   togglePassword(): void {
@@ -77,8 +95,8 @@ export class Auth {
       return;
     }
 
-    const { name, email, password } = this.registerForm.getRawValue();
-    const result = this.auth.register(name, email, password);
+    const { name, email, password, role } = this.registerForm.getRawValue();
+    const result = this.auth.register(name, email, password, role);
 
     if (result.success) {
       void this.router.navigate(['/gestion']);
