@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 import { createAuthMiddleware, createOptionalAuthMiddleware } from './auth-middleware.js';
 import { errorHandler } from './errors.js';
+import swaggerUi from 'swagger-ui-express';
+import { openApiSpec } from './openapi.js';
 import { createAuthRouter } from './routes/auth.js';
 import { createCompetitionRouter } from './routes/competition.js';
 import { createTournamentsRouter } from './routes/tournaments.js';
@@ -15,7 +17,7 @@ export function createApp({
   corsOrigin = process.env.CORS_ORIGIN ?? 'http://localhost:4200',
 }) {
   if (!db) {
-    throw new Error('Une connexion SQLite est requise pour démarrer l’API.');
+    throw new Error('Une connexion PostgreSQL est requise pour démarrer l’API.');
   }
   if (typeof jwtSecret !== 'string' || Buffer.byteLength(jwtSecret, 'utf8') < 32) {
     throw new Error('JWT_SECRET doit contenir au moins 32 caractères.');
@@ -34,6 +36,26 @@ export function createApp({
   });
 
   app.disable('x-powered-by');
+  app.use('/swagger', helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:'],
+        connectSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+      },
+    },
+  }));
+  app.get('/swagger/openapi.json', (_request, response) => {
+    response.json(openApiSpec);
+  });
+  app.use('/swagger', swaggerUi.serve, swaggerUi.setup(openApiSpec, {
+    explorer: true,
+    customSiteTitle: 'Tournoi Plus API',
+  }));
   app.use(helmet());
   app.use(cors({
     origin(origin, callback) {

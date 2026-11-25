@@ -1,0 +1,184 @@
+<main class="auth-page">
+  <video
+    class="background-video"
+    autoplay
+    muted
+    loop
+    playsinline
+    poster="https://cdn.coverr.co/videos/coverr-goalkeeper-during-a-soccer-match-30/thumbnail?width=1920"
+    aria-hidden="true"
+  >
+    <source src="https://cdn.coverr.co/videos/coverr-goalkeeper-during-a-soccer-match-30/1080p.mp4" type="video/mp4" />
+  </video>
+  @if (isAuthenticated) {
+    <section class="auth-card session-card" aria-labelledby="session-title">
+      <div class="session-content">
+        <p class="eyebrow">AUTHENTIFICATION RÉUSSIE</p>
+        <h1 id="session-title">Vous êtes connecté</h1>
+        @if (currentUser) {
+          <p>Bienvenue, <strong>{{ currentUser.name }}</strong>.</p>
+          <p>Rôle du compte : <strong>{{ roleLabel(currentUser.role) }}</strong></p>
+        }
+        <a class="login-button session-dashboard-link" routerLink="/gestion">Ouvrir le tableau de bord</a>
+        <button class="login-button" type="button" (click)="logout()">Se déconnecter</button>
+      </div>
+    </section>
+  } @else {
+  <section class="auth-card" aria-labelledby="auth-title">
+    <aside class="sports-panel" aria-hidden="true">
+      <div class="sports-brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48">
+            <path d="M15 10h18v5c0 8-3.7 13.5-9 16-5.3-2.5-9-8-9-16v-5Z" fill="none" stroke="currentColor" stroke-width="2.8"/>
+            <path d="M15 14H9v3c0 5 3.2 8.5 8.5 8.5M33 14h6v3c0 5-3.2 8.5-8.5 8.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>
+            <path d="M24 31v6M18 38h12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            <path d="M24 17v7M20.5 20.5h7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span>TOURNOI PLUS</span>
+      </div>
+      <div class="sports-copy">
+        <span class="competition-tag">Compétition · Passion · Victoire</span>
+        <h2>Faites vivre chaque match.</h2>
+        <p>Organisez, suivez et valorisez vos tournois depuis une seule plateforme.</p>
+      </div>
+      <div class="sport-visual">
+        <div class="ball"><span></span></div>
+        <div class="field-line field-line-one"></div>
+        <div class="field-line field-line-two"></div>
+      </div>
+    </aside>
+
+    <div class="auth-content">
+      <div class="mobile-brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48">
+            <path d="M15 10h18v5c0 8-3.7 13.5-9 16-5.3-2.5-9-8-9-16v-5Z" fill="none" stroke="currentColor" stroke-width="2.8"/>
+            <path d="M15 14H9v3c0 5 3.2 8.5 8.5 8.5M33 14h6v3c0 5-3.2 8.5-8.5 8.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>
+            <path d="M24 31v6M18 38h12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            <path d="m16 25 5 5 11-13" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <strong>Tournoi Plus</strong>
+      </div>
+      <div class="auth-tabs" role="tablist" aria-label="Choisir une action">
+        <button type="button" role="tab" [class.active]="mode === 'login'" [attr.aria-selected]="mode === 'login'" (click)="setMode('login')">Connexion</button>
+        <button type="button" role="tab" [class.active]="mode === 'register'" [attr.aria-selected]="mode === 'register'" (click)="setMode('register')">Créer un compte</button>
+      </div>
+
+      <div class="auth-heading" [class.login-heading]="mode === 'login'" [class.register-heading]="mode === 'register'">
+        <p class="eyebrow">{{ mode === 'login' ? 'Retour sur le terrain' : 'Rejoignez-nous' }}</p>
+        <h1 id="auth-title">{{ mode === 'login' ? 'Bienvenue' : 'Créer un compte' }}</h1>
+        <p>{{ mode === 'login' ? 'Connectez-vous à votre espace de gestion.' : 'Renseignez vos informations pour commencer.' }}</p>
+      </div>
+
+      @if (mode === 'login') {
+      <form class="auth-form login-form" [formGroup]="loginForm" (ngSubmit)="login()" novalidate>
+        <div class="field">
+          <label for="email">Adresse e-mail</label>
+          <div class="input-wrap">
+            <span class="input-icon" aria-hidden="true">&#64;</span>
+            <input
+              id="email"
+              type="email"
+              formControlName="email"
+              autocomplete="email"
+              placeholder="nom@exemple.com"
+            />
+          </div>
+          @if (loginForm.controls.email.touched && loginForm.controls.email.invalid) {
+            <p class="field-error">Saisissez une adresse e-mail valide.</p>
+          }
+        </div>
+
+        <div class="field">
+          <div class="label-row">
+            <label for="password">Mot de passe</label>
+          </div>
+          <div class="input-wrap">
+            <span class="input-icon lock-icon" aria-hidden="true"></span>
+            <input
+              id="password"
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="password"
+              autocomplete="current-password"
+              placeholder="Votre mot de passe"
+            />
+            <button
+              class="password-toggle"
+              type="button"
+              (click)="togglePassword()"
+              [attr.aria-label]="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+            >
+              {{ showPassword ? 'Masquer' : 'Afficher' }}
+            </button>
+          </div>
+          @if (loginForm.controls.password.touched && loginForm.controls.password.invalid) {
+            <p class="field-error">Le mot de passe doit contenir au moins 8 caractères.</p>
+          }
+        </div>
+
+        @if (errorMessage) {
+          <p class="auth-error" role="alert">{{ errorMessage }}</p>
+        }
+
+        <button class="login-button" type="submit">Se connecter <span aria-hidden="true">→</span></button>
+      </form>
+      } @else {
+      <form class="auth-form register-form" [formGroup]="registerForm" (ngSubmit)="register()" novalidate>
+        <div class="field">
+          <label for="name">Nom complet</label>
+          <div class="input-wrap">
+            <span class="input-icon" aria-hidden="true">●</span>
+            <input id="name" type="text" formControlName="name" autocomplete="name" placeholder="Votre nom" />
+          </div>
+          @if (registerForm.controls.name.touched && registerForm.controls.name.invalid) {
+            <p class="field-error">Saisissez au moins 2 caractères.</p>
+          }
+        </div>
+
+        <div class="field">
+          <label for="register-email">Adresse e-mail</label>
+          <div class="input-wrap">
+            <span class="input-icon" aria-hidden="true">&#64;</span>
+            <input id="register-email" type="email" formControlName="email" autocomplete="email" placeholder="nom@exemple.com" />
+          </div>
+          @if (registerForm.controls.email.touched && registerForm.controls.email.invalid) {
+            <p class="field-error">Saisissez une adresse e-mail valide.</p>
+          }
+        </div>
+
+        <div class="field">
+          <label for="register-password">Mot de passe</label>
+          <div class="input-wrap">
+            <span class="input-icon lock-icon" aria-hidden="true"></span>
+            <input id="register-password" [type]="showPassword ? 'text' : 'password'" formControlName="password" autocomplete="new-password" maxlength="72" placeholder="8 caractères minimum" />
+            <button class="password-toggle" type="button" (click)="togglePassword()" [attr.aria-label]="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'">
+              {{ showPassword ? 'Masquer' : 'Afficher' }}
+            </button>
+          </div>
+          @if (registerForm.controls.password.touched && registerForm.controls.password.invalid) {
+            <p class="field-error">Le mot de passe doit contenir au moins 8 caractères.</p>
+          }
+        </div>
+
+        <div class="field">
+          <label for="account-role">Type de compte</label>
+          <select id="account-role" class="role-select registration-role" formControlName="role">
+            @for (role of signupRoles; track role.value) {
+              <option [value]="role.value">{{ role.label }}</option>
+            }
+          </select>
+        </div>
+
+        @if (errorMessage) {
+          <p class="auth-error" role="alert">{{ errorMessage }}</p>
+        }
+
+        <button class="login-button" type="submit">Créer mon compte <span aria-hidden="true">→</span></button>
+      </form>
+      }
+    </div>
+  </section>
+  }
+</main>

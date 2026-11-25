@@ -62,37 +62,37 @@ function tournamentFromRow(row) {
   };
 }
 
-function findTournament(db, id) {
+async function findTournament(db, id) {
   return db.prepare('SELECT * FROM tournaments WHERE id = ?').get(id);
 }
 
 export function createTournamentsRouter({ db }) {
   const router = Router();
 
-  router.get('/', (_request, response) => {
-    const rows = db.prepare("SELECT * FROM tournaments WHERE status <> 'draft' ORDER BY start_date").all();
+  router.get('/', async (_request, response) => {
+    const rows = await db.prepare("SELECT * FROM tournaments WHERE status <> 'draft' ORDER BY start_date").all();
     response.json({ tournaments: rows.map(tournamentFromRow) });
   });
 
-  router.get('/mine', requireRole('organisateur'), (request, response) => {
-    const rows = db.prepare(
+  router.get('/mine', requireRole('organisateur'), async (request, response) => {
+    const rows = await db.prepare(
       'SELECT * FROM tournaments WHERE owner_email = ? ORDER BY start_date',
     ).all(request.user.email);
     response.json({ tournaments: rows.map(tournamentFromRow) });
   });
 
-  router.get('/:id', (request, response) => {
-    const tournament = requireEntity(findTournament(db, request.params.id));
+  router.get('/:id', async (request, response) => {
+    const tournament = requireEntity(await findTournament(db, request.params.id));
     if (tournament.status === 'draft' && tournament.owner_email !== request.user?.email) {
       throw new ApiError(404, 'Tournoi introuvable.');
     }
     response.json({ tournament: tournamentFromRow(tournament) });
   });
 
-  router.post('/', requireRole('organisateur'), (request, response) => {
+  router.post('/', requireRole('organisateur'), async (request, response) => {
     const input = parseTournamentInput(request.body);
     const id = randomUUID();
-    db.prepare(`
+    await db.prepare(`
       INSERT INTO tournaments (
         id, owner_email, name, sport, start_date, end_date, location,
         description, rules, format, status, max_teams
@@ -111,23 +111,23 @@ export function createTournamentsRouter({ db }) {
       input.status,
       input.maxTeams,
     );
-    response.status(201).json({ tournament: tournamentFromRow(findTournament(db, id)) });
+    response.status(201).json({ tournament: tournamentFromRow(await findTournament(db, id)) });
   });
 
-  router.put('/:id', requireRole('organisateur'), (request, response) => {
+  router.put('/:id', requireRole('organisateur'), async (request, response) => {
     const input = parseTournamentInput(request.body);
-    const tournament = requireEntity(findTournament(db, request.params.id));
+    const tournament = requireEntity(await findTournament(db, request.params.id));
     if (tournament.owner_email !== request.user.email) {
       throw new ApiError(404, 'Tournoi introuvable.');
     }
 
-    const teamCount = db.prepare('SELECT COUNT(*) AS count FROM teams WHERE tournament_id = ?')
-      .get(tournament.id).count;
+    const teamCount = (await db.prepare('SELECT COUNT(*) AS count FROM teams WHERE tournament_id = ?')
+      .get(tournament.id)).count;
     if (input.maxTeams < teamCount) {
       throw new ApiError(409, 'Le nombre maximal d’équipes ne peut pas être inférieur au nombre d’équipes inscrites.');
     }
 
-    db.prepare(`
+    await db.prepare(`
       UPDATE tournaments
       SET name = ?, sport = ?, start_date = ?, end_date = ?, location = ?,
           description = ?, rules = ?, format = ?, status = ?, max_teams = ?
@@ -145,11 +145,11 @@ export function createTournamentsRouter({ db }) {
       input.maxTeams,
       tournament.id,
     );
-    response.json({ tournament: tournamentFromRow(findTournament(db, tournament.id)) });
+    response.json({ tournament: tournamentFromRow(await findTournament(db, tournament.id)) });
   });
 
-  router.delete('/:id', requireRole('organisateur'), (request, response) => {
-    const result = db.prepare('DELETE FROM tournaments WHERE id = ? AND owner_email = ?')
+  router.delete('/:id', requireRole('organisateur'), async (request, response) => {
+    const result = await db.prepare('DELETE FROM tournaments WHERE id = ? AND owner_email = ?')
       .run(request.params.id, request.user.email);
     if (result.changes === 0) {
       throw new ApiError(404, 'Tournoi introuvable.');
@@ -157,18 +157,18 @@ export function createTournamentsRouter({ db }) {
     response.status(204).end();
   });
 
-  router.get('/:id/teams', requireRole('organisateur'), (request, response) => {
-    const tournament = requireEntity(findTournament(db, request.params.id));
+  router.get('/:id/teams', requireRole('organisateur'), async (request, response) => {
+    const tournament = requireEntity(await findTournament(db, request.params.id));
     if (tournament.owner_email !== request.user.email) {
       throw new ApiError(404, 'Tournoi introuvable.');
     }
-    const teams = db.prepare(`
-      SELECT t.id, t.tournament_id AS tournamentId, t.owner_email AS ownerEmail,
-             t.name, t.capacity, GROUP_CONCAT(tm.player_email) AS members
+    const teams = (await db.prepare(`
+      SELECT t.id, t.tournament_id AS "tournamentId", t.owner_email AS "ownerEmail",
+             t.name, t.capacity, STRING_AGG(tm.player_email, ',') AS members
       FROM teams t LEFT JOIN team_members tm ON tm.team_id = t.id
       WHERE t.tournament_id = ?
-      GROUP BY t.id ORDER BY t.name COLLATE NOCASE
-    `).all(tournament.id).map((team) => ({
+      GROUP BY t.id ORDER BY LOWER(t.name)
+    `).all(tournament.id)).map((team) => ({
       id: team.id,
       tournamentId: team.tournamentId,
       ownerEmail: team.ownerEmail,
@@ -179,8 +179,8 @@ export function createTournamentsRouter({ db }) {
     response.json({ teams });
   });
 
-  router.post('/:id/teams', requireRole('organisateur'), (request, response) => {
-    const tournament = requireEntity(findTournament(db, request.params.id));
+  router.post('/:id/teams', requireRole('organisateur'), async (request, response) => {
+    const tournament = requireEntity(await findTournament(db, request.params.id));
     const name = requireText(request.body?.name, 'name', 100);
     const capacity = request.body?.capacity;
     if (
@@ -192,14 +192,14 @@ export function createTournamentsRouter({ db }) {
     ) {
       throw new ApiError(400, 'Impossible de créer cette équipe avec les informations fournies.');
     }
-    const teamCount = db.prepare('SELECT COUNT(*) AS count FROM teams WHERE tournament_id = ?')
-      .get(tournament.id).count;
+    const teamCount = (await db.prepare('SELECT COUNT(*) AS count FROM teams WHERE tournament_id = ?')
+      .get(tournament.id)).count;
     if (teamCount >= tournament.max_teams) {
       throw new ApiError(409, 'Le nombre maximal d’équipes est atteint.');
     }
 
     const teamId = randomUUID();
-    db.prepare(
+    await db.prepare(
       'INSERT INTO teams (id, tournament_id, owner_email, name, capacity) VALUES (?, ?, ?, ?, ?)',
     ).run(teamId, tournament.id, request.user.email, name, capacity);
     response.status(201).json({
@@ -214,8 +214,65 @@ export function createTournamentsRouter({ db }) {
     });
   });
 
-  router.delete('/teams/:teamId', requireRole('organisateur'), (request, response) => {
-    const team = db.prepare(`
+  router.put('/teams/:teamId', requireRole('organisateur'), async (request, response) => {
+    const team = await db.prepare(`
+      SELECT teams.id, teams.tournament_id, teams.owner_email, teams.name, teams.capacity
+      FROM teams
+      JOIN tournaments ON tournaments.id = teams.tournament_id
+      WHERE teams.id = ? AND tournaments.owner_email = ?
+    `).get(request.params.teamId, request.user.email);
+    if (!team) {
+      throw new ApiError(404, 'Équipe introuvable.');
+    }
+
+    const name = requireText(request.body?.name, 'name', 100);
+    const capacity = request.body?.capacity;
+    if (!Number.isInteger(capacity) || capacity < 2 || capacity > 100) {
+      throw new ApiError(400, 'La capacité de l’équipe est invalide.');
+    }
+
+    const duplicate = await db.prepare(`
+      SELECT id FROM teams
+      WHERE tournament_id = ? AND LOWER(name) = LOWER(?) AND id <> ?
+    `).get(team.tournament_id, name, team.id);
+    if (duplicate) {
+      throw new ApiError(409, 'Une équipe portant ce nom existe déjà dans ce tournoi.');
+    }
+
+    const memberCount = (await db.prepare(
+      'SELECT COUNT(*) AS count FROM team_members WHERE team_id = ?',
+    ).get(team.id)).count;
+    if (capacity < memberCount) {
+      throw new ApiError(409, 'La capacité ne peut pas être inférieure au nombre de membres inscrits.');
+    }
+
+    try {
+      await db.prepare('UPDATE teams SET name = ?, capacity = ? WHERE id = ?')
+        .run(name, capacity, team.id);
+    } catch (error) {
+      if (error?.code === '23505') {
+        throw new ApiError(409, 'Une équipe portant ce nom existe déjà dans ce tournoi.');
+      }
+      throw error;
+    }
+
+    const memberEmails = (await db.prepare(
+      'SELECT player_email FROM team_members WHERE team_id = ? ORDER BY player_email',
+    ).all(team.id)).map((member) => member.player_email);
+    response.json({
+      team: {
+        id: team.id,
+        tournamentId: team.tournament_id,
+        ownerEmail: team.owner_email,
+        name,
+        capacity,
+        memberEmails,
+      },
+    });
+  });
+
+  router.delete('/teams/:teamId', requireRole('organisateur'), async (request, response) => {
+    const team = await db.prepare(`
       SELECT teams.id FROM teams
       JOIN tournaments ON tournaments.id = teams.tournament_id
       WHERE teams.id = ? AND tournaments.owner_email = ?
@@ -223,28 +280,28 @@ export function createTournamentsRouter({ db }) {
     if (!team) {
       throw new ApiError(404, 'Équipe introuvable.');
     }
-    const match = db.prepare(
+    const match = await db.prepare(
       'SELECT id FROM matches WHERE home_team_id = ? OR away_team_id = ? LIMIT 1',
     ).get(team.id, team.id);
     if (match) {
       throw new ApiError(409, 'Une équipe déjà affectée à un match ne peut pas être supprimée.');
     }
-    db.prepare('DELETE FROM teams WHERE id = ?').run(team.id);
+    await db.prepare('DELETE FROM teams WHERE id = ?').run(team.id);
     response.status(204).end();
   });
 
-  router.delete('/teams/:teamId/members/:email', requireRole('organisateur'), (request, response) => {
-    const member = db.prepare(`
+  router.delete('/teams/:teamId/members/:email', requireRole('organisateur'), async (request, response) => {
+    const member = await db.prepare(`
       SELECT tm.team_id FROM team_members tm
       JOIN teams ON teams.id = tm.team_id
       JOIN tournaments ON tournaments.id = teams.tournament_id
-      WHERE tm.team_id = ? AND tm.player_email = ? COLLATE NOCASE
+      WHERE tm.team_id = ? AND tm.player_email = ?
         AND tournaments.owner_email = ?
     `).get(request.params.teamId, request.params.email, request.user.email);
     if (!member) {
       throw new ApiError(404, 'Membre introuvable dans cette équipe.');
     }
-    db.prepare('DELETE FROM team_members WHERE team_id = ? AND player_email = ?')
+    await db.prepare('DELETE FROM team_members WHERE team_id = ? AND player_email = ?')
       .run(member.team_id, request.params.email);
     response.status(204).end();
   });
