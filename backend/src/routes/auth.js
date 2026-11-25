@@ -25,11 +25,11 @@ export function createAuthRouter({ db, authenticate, jwtSecret, jwtExpiresIn }) 
     const normalizedEmail = email.trim().toLowerCase();
     const passwordHash = await bcrypt.hash(password, 12);
     try {
-      db.prepare(
+      await db.prepare(
         'INSERT INTO users (email, name, password_hash, role) VALUES (?, ?, ?, ?)',
       ).run(normalizedEmail, name.trim(), passwordHash, role);
     } catch (error) {
-      if (error?.code === 'SQLITE_CONSTRAINT_PRIMARYKEY' || error?.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+      if (error?.code === '23505') {
         throw new ApiError(409, 'Cette adresse e-mail est déjà utilisée.');
       }
       throw error;
@@ -46,8 +46,8 @@ export function createAuthRouter({ db, authenticate, jwtSecret, jwtExpiresIn }) 
       throw new ApiError(400, 'Adresse e-mail ou mot de passe invalide.');
     }
 
-    const user = db.prepare(
-      'SELECT email, name, role, password_hash FROM users WHERE email = ? COLLATE NOCASE',
+    const user = await db.prepare(
+      'SELECT email, name, role, password_hash FROM users WHERE email = ?',
     ).get(email.trim());
     const passwordMatches = user
       ? await bcrypt.compare(password, user.password_hash)
@@ -66,9 +66,9 @@ export function createAuthRouter({ db, authenticate, jwtSecret, jwtExpiresIn }) 
     response.json({ user: request.user });
   });
 
-  router.get('/referees', authenticate, requireRole('organisateur'), (_request, response) => {
-    const referees = db.prepare(
-      "SELECT name, email FROM users WHERE role = 'arbitre' ORDER BY name COLLATE NOCASE",
+  router.get('/referees', authenticate, requireRole('organisateur'), async (_request, response) => {
+    const referees = await db.prepare(
+      "SELECT name, email FROM users WHERE role = 'arbitre' ORDER BY LOWER(name)",
     ).all();
     response.json({ referees });
   });

@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { createApp } from './app.js';
 import { createDatabase } from './database.js';
 
-const db = createDatabase();
+const db = await createDatabase();
 const app = createApp({ db });
 const port = Number.parseInt(process.env.PORT ?? '3000', 10);
 

@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 
 export function createAuthMiddleware(db, jwtSecret) {
-  return (request, response, next) => {
+  return async (request, response, next) => {
     const authorization = request.get('authorization') ?? '';
     const [scheme, token] = authorization.split(' ');
 
@@ -12,7 +12,7 @@ export function createAuthMiddleware(db, jwtSecret) {
 
     try {
       const payload = jwt.verify(token, jwtSecret);
-      const user = db.prepare(
+      const user = await db.prepare(
         'SELECT email, name, role FROM users WHERE email = ?',
       ).get(payload.sub);
 
@@ -41,6 +41,6 @@ export function createOptionalAuthMiddleware(db, jwtSecret) {
       next();
       return;
     }
-    authenticate(request, response, next);
+    return authenticate(request, response, next);
   };
 }

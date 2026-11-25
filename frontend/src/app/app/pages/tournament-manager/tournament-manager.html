@@ -1,0 +1,144 @@
+<main class="api-manager-page">
+  <header class="api-manager-header">
+    <div>
+      <p class="eyebrow">DONNÉES PERSISTÉES PAR L’API</p>
+      <h1>Gestion des tournois</h1>
+      <p>Les tournois et équipes ci-dessous sont enregistrés dans PostgreSQL.</p>
+    </div>
+    <a routerLink="/gestion">Retour à mon espace</a>
+  </header>
+
+  @if (message()) {
+    <p class="feedback success" role="status">{{ message() }}</p>
+  }
+  @if (error()) {
+    <p class="feedback error" role="alert">{{ error() }}</p>
+  }
+
+  <section class="manager-grid">
+    <section class="panel" aria-labelledby="tournaments-title">
+      <h2 id="tournaments-title">Mes tournois</h2>
+      @if (loading()) {
+        <p role="status">Chargement des tournois…</p>
+      } @else {
+        <app-tournament-list
+          [tournaments]="tournaments()"
+          [selectedId]="selectedTournament()?.id ?? null"
+          (selected)="selectTournament($event)"
+          (edit)="editTournament($event)"
+          (remove)="deleteTournament($event)"
+        />
+      }
+
+      <form [formGroup]="tournamentForm" (ngSubmit)="saveTournament()" novalidate>
+        <h3>{{ editingTournamentId() ? 'Modifier le tournoi' : 'Créer un tournoi' }}</h3>
+        <label for="name">Nom</label>
+        <input id="name" formControlName="name" maxlength="120" />
+        @if (tournamentForm.controls.name.touched && tournamentForm.controls.name.invalid) {
+          <small class="field-error">Le nom est obligatoire (120 caractères maximum).</small>
+        }
+
+        <label for="sport">Sport</label>
+        <select id="sport" formControlName="sport">
+          <option value="">Choisir un sport</option>
+          @for (sport of sports; track sport) {
+            <option [value]="sport">{{ sport }}</option>
+          }
+        </select>
+
+        <div class="date-row">
+          <div>
+            <label for="start-date">Date de début</label>
+            <input id="start-date" type="date" formControlName="startDate" />
+          </div>
+          <div>
+            <label for="end-date">Date de fin</label>
+            <input id="end-date" type="date" formControlName="endDate" />
+          </div>
+        </div>
+        @if (tournamentForm.hasError('invalidDateRange')) {
+          <small class="field-error">La date de fin doit être égale ou postérieure à la date de début.</small>
+        }
+
+        <label for="location">Lieu</label>
+        <input id="location" formControlName="location" maxlength="200" />
+
+        <label for="description">Description</label>
+        <textarea id="description" formControlName="description" maxlength="2000"></textarea>
+
+        <label for="rules">Règlement</label>
+        <textarea id="rules" formControlName="rules" maxlength="5000"></textarea>
+
+        <div class="form-row">
+          <div>
+            <label for="format">Format</label>
+            <select id="format" formControlName="format">
+              <option value="elimination">Élimination</option>
+              <option value="league">Championnat</option>
+              <option value="groups">Groupes</option>
+            </select>
+          </div>
+          <div>
+            <label for="status">Statut</label>
+            <select id="status" formControlName="status">
+              <option value="draft">Brouillon</option>
+              <option value="open">Ouvert</option>
+              <option value="in_progress">En cours</option>
+              <option value="completed">Terminé</option>
+            </select>
+          </div>
+        </div>
+
+        <label for="max-teams">Nombre maximal d’équipes</label>
+        <input id="max-teams" type="number" formControlName="maxTeams" min="2" max="100" />
+        <div class="button-row">
+          <button type="submit">{{ editingTournamentId() ? 'Enregistrer' : 'Créer' }}</button>
+          @if (editingTournamentId()) {
+            <button type="button" class="secondary" (click)="resetTournamentForm()">Annuler</button>
+          }
+        </div>
+      </form>
+    </section>
+
+    <section class="panel" aria-labelledby="teams-title">
+      <h2 id="teams-title">Équipes</h2>
+      @if (selectedTournament(); as tournament) {
+        <p class="selected-tournament">Tournoi : <strong>{{ tournament.name }}</strong></p>
+        @if (teams().length) {
+          <ul class="team-list">
+            @for (team of teams(); track team.id) {
+              <li>
+                <span><strong>{{ team.name }}</strong><small>Capacité : {{ team.capacity }}</small></span>
+                <span class="button-row">
+                  <button type="button" class="secondary" (click)="editTeam(team)">Modifier</button>
+                  <button type="button" class="danger" (click)="deleteTeam(team)">Supprimer</button>
+                </span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="empty-list">Aucune équipe pour ce tournoi.</p>
+        }
+
+        <form [formGroup]="teamForm" (ngSubmit)="saveTeam()" novalidate>
+          <h3>{{ editingTeamId() ? 'Modifier l’équipe' : 'Créer une équipe' }}</h3>
+          <label for="team-name">Nom de l’équipe</label>
+          <input id="team-name" formControlName="name" maxlength="100" />
+          @if (teamForm.controls.name.touched && teamForm.controls.name.invalid) {
+            <small class="field-error">Le nom est obligatoire (100 caractères maximum).</small>
+          }
+          <label for="capacity">Capacité</label>
+          <input id="capacity" type="number" formControlName="capacity" min="2" max="100" />
+          <div class="button-row">
+            <button type="submit">{{ editingTeamId() ? 'Enregistrer' : 'Créer' }}</button>
+            @if (editingTeamId()) {
+              <button type="button" class="secondary" (click)="resetTeamForm()">Annuler</button>
+            }
+          </div>
+        </form>
+      } @else {
+        <p class="empty-list">Créez ou sélectionnez un tournoi pour gérer ses équipes.</p>
+      }
+    </section>
+  </section>
+</main>

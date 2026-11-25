@@ -1,14 +1,14 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import Database from 'better-sqlite3';
+import pg from 'pg';
+
+const { Pool } = pg;
 
 const schema = `
   CREATE TABLE IF NOT EXISTS users (
-    email TEXT PRIMARY KEY COLLATE NOCASE,
+    email TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL CHECK (role IN ('organisateur', 'joueur', 'spectateur', 'arbitre')),
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
   CREATE TABLE IF NOT EXISTS tournaments (
@@ -30,10 +30,11 @@ const schema = `
     id TEXT PRIMARY KEY,
     tournament_id TEXT NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
     owner_email TEXT NOT NULL REFERENCES users(email) ON DELETE CASCADE,
-    name TEXT NOT NULL COLLATE NOCASE,
-    capacity INTEGER NOT NULL CHECK (capacity BETWEEN 2 AND 100),
-    UNIQUE (tournament_id, name)
+    name TEXT NOT NULL,
+    capacity INTEGER NOT NULL CHECK (capacity BETWEEN 2 AND 100)
   );
+  CREATE UNIQUE INDEX IF NOT EXISTS unique_team_name_per_tournament
+    ON teams(tournament_id, LOWER(name));
 
   CREATE TABLE IF NOT EXISTS team_members (
     team_id TEXT NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
@@ -46,7 +47,8 @@ const schema = `
     team_id TEXT NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
     player_email TEXT NOT NULL REFERENCES users(email) ON DELETE CASCADE,
     status TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'rejected')),
-    reason TEXT NOT NULL DEFAULT ''
+    reason TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
   CREATE UNIQUE INDEX IF NOT EXISTS one_pending_join_request
     ON join_requests(team_id, player_email) WHERE status = 'pending';
@@ -80,13 +82,57 @@ const schema = `
   );
 `;
 
-export function createDatabase(databasePath = process.env.DATABASE_PATH ?? './data/tournoi-plus.sqlite') {
-  const resolvedPath = path.resolve(databasePath);
-  fs.mkdirSync(path.dirname(resolvedPath), { recursive: true });
+function createQueryInterface(query) {
+  function prepare(sql) {
+    const postgresSql = sql.replace(/\?/g, (_, offset) => {
+      const previousPlaceholders = sql.slice(0, offset).match(/\?/g);
+      return `$${(previousPlaceholders?.length ?? 0) + 1}`;
+    });
 
-  const db = new Database(resolvedPath);
-  db.pragma('foreign_keys = ON');
-  db.pragma('journal_mode = WAL');
-  db.exec(schema);
+    return {
+      async get(...values) {
+        const result = await query(postgresSql, values);
+        return result.rows[0];
+      },
+      async all(...values) {
+        const result = await query(postgresSql, values);
+        return result.rows;
+      },
+      async run(...values) {
+        const result = await query(postgresSql, values);
+        return { changes: result.rowCount };
+      },
+    };
+  }
+
+  return { prepare };
+}
+
+export async function createDatabase(connectionString = process.env.DATABASE_URL) {
+  if (!connectionString) {
+    throw new Error('DATABASE_URL doit pointer vers une base PostgreSQL.');
+  }
+
+  const pool = new Pool({ connectionString });
+  const db = createQueryInterface((sql, values) => pool.query(sql, values));
+  db.transaction = async (callback) => {
+    const client = await pool.connect();
+    const transactionDb = createQueryInterface((sql, values) => client.query(sql, values));
+
+    try {
+      await client.query('BEGIN');
+      const result = await callback(transactionDb);
+      await client.query('COMMIT');
+      return result;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  };
+  db.close = () => pool.end();
+
+  await pool.query(schema);
   return db;
 }

@@ -1,26 +1,25 @@
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
+import 'dotenv/config';
 import { afterEach, beforeEach, test } from 'node:test';
 import request from 'supertest';
 import { createApp } from '../src/app.js';
 import { createDatabase } from '../src/database.js';
 
 const jwtSecret = 'test-secret-with-more-than-thirty-two-characters';
-let temporaryDirectory;
 let db;
 let app;
 
-beforeEach(() => {
-  temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'tournoi-plus-api-'));
-  db = createDatabase(path.join(temporaryDirectory, 'test.sqlite'));
+beforeEach(async () => {
+  db = await createDatabase();
+  await db.prepare(`
+    TRUNCATE TABLE followed_tournaments, player_points, matches, join_requests,
+      team_members, teams, tournaments, users CASCADE
+  `).run();
   app = createApp({ db, jwtSecret });
 });
 
-afterEach(() => {
-  db.close();
-  fs.rmSync(temporaryDirectory, { recursive: true, force: true });
+afterEach(async () => {
+  await db.close();
 });
 
 async function register(name, email, role) {
@@ -52,7 +51,7 @@ test('registers users with a password hash and issues a token', async () => {
     role: 'organisateur',
   });
   assert.ok(response.body.token);
-  const savedUser = db.prepare('SELECT password_hash FROM users WHERE email = ?')
+  const savedUser = await db.prepare('SELECT password_hash FROM users WHERE email = ?')
     .get('orga@example.com');
   assert.notEqual(savedUser.password_hash, 'motdepasse-securise');
 

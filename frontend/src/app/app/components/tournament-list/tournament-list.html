@@ -1,0 +1,19 @@
+@if (tournaments.length) {
+  <ul class="tournament-list">
+    @for (tournament of tournaments; track tournament.id) {
+      <li [class.selected]="selectedId === tournament.id">
+        <button class="tournament-choice" type="button" (click)="selected.emit(tournament)">
+          <strong>{{ tournament.name }}</strong>
+          <span>{{ tournament.sport }} · {{ tournament.status | tournamentStatus }}</span>
+          <small>{{ tournament.startDate }} — {{ tournament.endDate }}</small>
+        </button>
+        <div class="tournament-actions">
+          <button type="button" (click)="edit.emit(tournament)">Modifier</button>
+          <button type="button" (click)="remove.emit(tournament)">Supprimer</button>
+        </div>
+      </li>
+    }
+  </ul>
+} @else {
+  <p class="empty-list">Aucun tournoi dans votre compte.</p>
+}

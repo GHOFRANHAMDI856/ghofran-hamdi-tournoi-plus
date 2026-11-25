@@ -21,7 +21,7 @@ export function errorHandler(error, _request, response, _next) {
     return;
   }
 
-  if (error?.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+  if (error?.code === '23505') {
     response.status(409).json({ error: 'Cette donnée existe déjà.' });
     return;
   }
